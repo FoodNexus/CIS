@@ -29,7 +29,7 @@ export interface ImpactMetrics {
 
 @Injectable({ providedIn: 'root' })
 export class MetricsService {
-  private readonly API_URL = 'http://localhost:8081/api';
+  private readonly API_URL = 'http://localhost:8180/api';
 
   constructor(private http: HttpClient) {}
 

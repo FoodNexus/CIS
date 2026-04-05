@@ -45,7 +45,7 @@ export interface CommentRequest {
 
 @Injectable({ providedIn: 'root' })
 export class PostsService {
-  private readonly API_URL = 'http://localhost:8081/api/posts';
+  private readonly API_URL = 'http://localhost:8180/api/posts';
 
   constructor(private http: HttpClient) {}
 
