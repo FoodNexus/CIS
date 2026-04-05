@@ -20,11 +20,8 @@ services:
       - civic-platform-network
 
   backend:
-    image: teamsync-backend:latest
+    image: teamsync-backend-dev:latest
     container_name: civic-platform-backend
-    build:
-      context: ./civic-platform-backend
-      dockerfile: Dockerfile
     ports:
       - "8180:8080"
       - "5005:5005"
@@ -44,11 +41,8 @@ services:
       - civic-platform-network
 
   frontend:
-    image: teamsync-frontend:latest
+    image: teamsync-frontend-dev:latest
     container_name: civic-platform-frontend
-    build:
-      context: ./civic-platform-frontend
-      dockerfile: Dockerfile
     ports:
       - "4222:4200"
     environment:
