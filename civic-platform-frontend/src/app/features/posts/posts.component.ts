@@ -29,7 +29,11 @@ export class PostsComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to load posts';
+        if (error.status === 0) {
+          this.errorMessage = 'Cannot connect to server. Please make sure the backend is running.';
+        } else {
+          this.errorMessage = error.error?.message || 'Failed to load posts';
+        }
         this.isLoading = false;
       }
     });
