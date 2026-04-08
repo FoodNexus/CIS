@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { finalize } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 import { BadgeComponent } from '@shared/components/badge/badge.component';
 import { CampaignsService, Campaign } from '@core/services/campaigns.service';
 import { EventsService, Event, EventParticipation } from '@core/services/events.service';
-import { ProjectsService, Project } from '@core/services/projects.service';
+import { ProjectsService, Project, ProjectFundingHistory } from '@core/services/projects.service';
 import { PostsService, Post } from '@core/services/posts.service';
-import { User, Badge } from '@core/models/auth.models';
+import { User } from '@core/models/auth.models';
 
 interface DashboardTab {
   id: string;
@@ -119,7 +120,8 @@ export class DashboardComponent implements OnInit {
       this.eventsService.getAllEvents().pipe(catchError(() => of([]))),
       this.projectsService.getAllProjects().pipe(catchError(() => of([]))),
       this.postsService.getAllPosts().pipe(catchError(() => of([]))),
-      this.eventsService.getMyParticipations().pipe(catchError(() => of([])))
+      this.eventsService.getMyParticipations().pipe(catchError(() => of([]))),
+      this.projectsService.getMyFundings().pipe(catchError(() => of([])))
     ];
 
     forkJoin(requests).subscribe({
@@ -141,15 +143,39 @@ export class DashboardComponent implements OnInit {
           this.myCampaigns = results[0] || [];
           this.myEvents = results[1] || [];
           this.myProjects = results[2] || [];
+          this.myParticipations = [];
+          this.myFundingHistory = [];
+          this.eventsAttended = 0;
           this.calculateImpactStats();
         } else {
           this.feedCampaigns = results[0] || [];
           this.feedEvents = results[1] || [];
           this.feedProjects = results[2] || [];
           this.myParticipations = results[4] || [];
-          this.eventsAttended = this.myParticipations.filter(p => p.status === 'COMPLETED').length;
+          const fundings: ProjectFundingHistory[] = results[5] || [];
+          this.myFundingHistory = fundings.map(f => ({
+            projectId: f.projectId,
+            projectTitle: f.projectTitle,
+            amount: Number(f.amount),
+            fundDate: f.fundDate,
+            paymentMethod: f.paymentMethod
+          }));
+          const completed = this.myParticipations.filter(p => p.status === 'COMPLETED').length;
+          this.eventsAttended = completed;
         }
-        this.isLoading = false;
+
+        this.authService.refreshProfile().pipe(
+          finalize(() => this.isLoading = false)
+        ).subscribe({
+          next: () => {
+            this.currentUser = this.authService.getCurrentUser();
+            if (!this.isDonor()) {
+              const pts = this.currentUser?.points ?? 0;
+              this.eventsAttended = Math.max(this.eventsAttended, pts);
+            }
+          },
+          error: () => {}
+        });
       },
       error: (err) => {
         this.error = 'Failed to load dashboard data';
@@ -224,21 +250,22 @@ export class DashboardComponent implements OnInit {
     return this.currentUser?.awardedDate;
   }
 
-  // Badge progress calculation
+  // Badge progress — completed events attended (synced with server points after refresh)
   getNextBadgeThreshold(): number {
-    const points = this.getUserPoints();
-    if (points >= 8) return 8;
-    if (points >= 5) return 8;
-    if (points >= 3) return 5;
-    if (points >= 1) return 3;
+    const n = this.eventsAttended;
+    if (n >= 8) return 8;
+    if (n >= 5) return 8;
+    if (n >= 3) return 5;
+    if (n >= 1) return 3;
     return 1;
   }
 
   getBadgeProgressPercent(): number {
-    const current = this.getUserPoints();
+    const n = this.eventsAttended;
+    if (n >= 8) return 100;
     const next = this.getNextBadgeThreshold();
-    if (current >= 8) return 100;
-    return (current / next) * 100;
+    if (next <= 0) return 0;
+    return Math.min(100, (n / next) * 100);
   }
 
   getBadgeLabel(badge: string): string {

@@ -12,7 +12,9 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface ProjectFundingMapper {
 
+    @Mapping(target = "projectId", source = "project.id")
     @Mapping(target = "projectTitle", source = "project.title")
+    @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "userName", source = "user.userName")
     @Mapping(target = "userEmail", source = "user.email")
     ProjectFundingResponse toResponse(ProjectFunding projectFunding);

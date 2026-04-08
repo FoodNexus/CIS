@@ -2,6 +2,7 @@ package com.civicplatform.controller;
 
 import com.civicplatform.dto.request.EventRequest;
 import com.civicplatform.dto.response.EventParticipantResponse;
+import com.civicplatform.dto.response.EventRegistrationStatusResponse;
 import com.civicplatform.dto.response.EventResponse;
 import com.civicplatform.entity.User;
 import com.civicplatform.enums.EventStatus;
@@ -42,17 +43,19 @@ public class EventController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Get event by ID")
-    @GetMapping("/{id}")
-    public ResponseEntity<EventResponse> getEventById(@PathVariable Long id) {
-        EventResponse response = eventService.getEventById(id);
+    /** Static paths must be declared before /{id} or Spring matches "my-participations" as an id. */
+    @Operation(summary = "Get my event participations")
+    @GetMapping("/my-participations")
+    public ResponseEntity<List<EventParticipantResponse>> getMyParticipations(Authentication authentication) {
+        Long userId = getUserIdFromAuthentication(authentication);
+        List<EventParticipantResponse> response = eventService.getParticipationsByUser(userId);
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Get all events")
-    @GetMapping
-    public ResponseEntity<List<EventResponse>> getAllEvents() {
-        List<EventResponse> response = eventService.getAllEvents();
+    @Operation(summary = "Get upcoming events")
+    @GetMapping("/upcoming")
+    public ResponseEntity<List<EventResponse>> getUpcomingEvents() {
+        List<EventResponse> response = eventService.getUpcomingEvents();
         return ResponseEntity.ok(response);
     }
 
@@ -70,10 +73,27 @@ public class EventController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Get upcoming events")
-    @GetMapping("/upcoming")
-    public ResponseEntity<List<EventResponse>> getUpcomingEvents() {
-        List<EventResponse> response = eventService.getUpcomingEvents();
+    @Operation(summary = "Get all events")
+    @GetMapping
+    public ResponseEntity<List<EventResponse>> getAllEvents() {
+        List<EventResponse> response = eventService.getAllEvents();
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Whether the current user is registered for this event")
+    @GetMapping("/{id}/registration")
+    public ResponseEntity<EventRegistrationStatusResponse> getRegistrationStatus(
+            @PathVariable Long id,
+            Authentication authentication) {
+        Long userId = getUserIdFromAuthentication(authentication);
+        EventRegistrationStatusResponse response = eventService.getRegistrationStatus(id, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get event by ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<EventResponse> getEventById(@PathVariable Long id) {
+        EventResponse response = eventService.getEventById(id);
         return ResponseEntity.ok(response);
     }
 
@@ -123,14 +143,6 @@ public class EventController {
         checkEventOwnership(id, authentication);
         eventService.checkInParticipant(id, userId);
         return ResponseEntity.ok().build();
-    }
-
-    @Operation(summary = "Get my event participations")
-    @GetMapping("/my-participations")
-    public ResponseEntity<List<EventParticipantResponse>> getMyParticipations(Authentication authentication) {
-        Long userId = getUserIdFromAuthentication(authentication);
-        List<EventParticipantResponse> response = eventService.getParticipationsByUser(userId);
-        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Confirm attendance and trigger promotion")

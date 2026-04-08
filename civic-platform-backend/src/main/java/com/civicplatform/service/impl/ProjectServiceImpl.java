@@ -2,10 +2,12 @@ package com.civicplatform.service.impl;
 
 import com.civicplatform.dto.request.ProjectFundingRequest;
 import com.civicplatform.dto.request.ProjectRequest;
+import com.civicplatform.dto.response.ProjectFundingResponse;
 import com.civicplatform.dto.response.ProjectResponse;
 import com.civicplatform.entity.Project;
 import com.civicplatform.entity.ProjectFunding;
 import com.civicplatform.entity.User;
+import com.civicplatform.mapper.ProjectFundingMapper;
 import com.civicplatform.mapper.ProjectMapper;
 import com.civicplatform.repository.ProjectFundingRepository;
 import com.civicplatform.repository.ProjectRepository;
@@ -28,6 +30,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final UserRepository userRepository;
     private final ProjectFundingRepository projectFundingRepository;
     private final ProjectMapper projectMapper;
+    private final ProjectFundingMapper projectFundingMapper;
 
     @Override
     @Transactional
@@ -40,6 +43,12 @@ public class ProjectServiceImpl implements ProjectService {
 
         project = projectRepository.save(project);
         return projectMapper.toResponse(project);
+    }
+
+    @Override
+    public List<ProjectFundingResponse> getFundingsByUser(Long userId) {
+        List<ProjectFunding> rows = projectFundingRepository.findByUserIdWithDetails(userId);
+        return projectFundingMapper.toResponseList(rows);
     }
 
     @Override

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, map } from 'rxjs';
 import { AuthResponse, LoginRequest, RegisterRequest, RefreshTokenRequest, User } from '../models/auth.models';
 import { ApiResponse } from '../models/common.models';
 
@@ -9,6 +9,7 @@ import { ApiResponse } from '../models/common.models';
 })
 export class AuthService {
   private readonly API_URL = 'http://localhost:8081/api/auth';
+  private readonly USERS_API_URL = 'http://localhost:8081/api/users';
   private readonly TOKEN_KEY = 'auth_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly USER_KEY = 'current_user';
@@ -116,6 +117,33 @@ export class AuthService {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : ''
     });
+  }
+
+  /** Loads latest profile (badge, points, userType) from the server and updates local storage. */
+  refreshProfile(): Observable<User> {
+    return this.http.get<Record<string, unknown>>(`${this.USERS_API_URL}/me`).pipe(
+      map((p) => ({
+        id: p['id'] as number,
+        userName: p['userName'] as string,
+        email: p['email'] as string,
+        userType: p['userType'] as User['userType'],
+        role: p['role'] as User['role'],
+        badge: p['badge'] as User['badge'],
+        points: (p['points'] as number) ?? 0,
+        awardedDate: p['awardedDate'] as string | undefined,
+        createdAt: (p['createdAt'] as string) ?? '',
+        firstName: p['firstName'] as string | undefined,
+        lastName: p['lastName'] as string | undefined,
+        phone: p['phone'] as string | undefined,
+        address: p['address'] as string | undefined,
+        birthDate: p['birthDate'] as string | undefined,
+        companyName: p['companyName'] as string | undefined,
+        associationName: p['associationName'] as string | undefined,
+        contactName: p['contactName'] as string | undefined,
+        contactEmail: p['contactEmail'] as string | undefined
+      })),
+      tap((user) => this.updateCurrentUser(user))
+    );
   }
 
   private handleAuthentication(response: AuthResponse): void {

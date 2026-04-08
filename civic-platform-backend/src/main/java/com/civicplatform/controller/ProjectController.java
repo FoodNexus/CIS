@@ -2,6 +2,7 @@ package com.civicplatform.controller;
 
 import com.civicplatform.dto.request.ProjectFundingRequest;
 import com.civicplatform.dto.request.ProjectRequest;
+import com.civicplatform.dto.response.ProjectFundingResponse;
 import com.civicplatform.dto.response.ProjectResponse;
 import com.civicplatform.entity.User;
 import com.civicplatform.enums.UserType;
@@ -41,10 +42,19 @@ public class ProjectController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Get project by ID")
-    @GetMapping("/{id}")
-    public ResponseEntity<ProjectResponse> getProjectById(@PathVariable Long id) {
-        ProjectResponse response = projectService.getProjectById(id);
+    /** Must be before GET /{id} or "my-fundings" is parsed as an id. */
+    @Operation(summary = "Get my project donations (funding history)")
+    @GetMapping("/my-fundings")
+    public ResponseEntity<List<ProjectFundingResponse>> getMyFundings(Authentication authentication) {
+        Long userId = getUserIdFromAuthentication(authentication);
+        List<ProjectFundingResponse> response = projectService.getFundingsByUser(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get projects by status")
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<ProjectResponse>> getProjectsByStatus(@PathVariable String status) {
+        List<ProjectResponse> response = projectService.getProjectsByStatus(status);
         return ResponseEntity.ok(response);
     }
 
@@ -55,10 +65,10 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Get projects by status")
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<ProjectResponse>> getProjectsByStatus(@PathVariable String status) {
-        List<ProjectResponse> response = projectService.getProjectsByStatus(status);
+    @Operation(summary = "Get project by ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<ProjectResponse> getProjectById(@PathVariable Long id) {
+        ProjectResponse response = projectService.getProjectById(id);
         return ResponseEntity.ok(response);
     }
 

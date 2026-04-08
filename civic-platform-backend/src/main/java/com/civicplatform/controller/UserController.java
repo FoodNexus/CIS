@@ -32,10 +32,10 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Get user by ID")
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
-        UserResponse response = userService.getUserById(id);
+    @Operation(summary = "Get current authenticated user")
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
+        UserResponse response = userService.getUserByEmail(authentication.getName());
         return ResponseEntity.ok(response);
     }
 
@@ -54,17 +54,17 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Get current authenticated user")
-    @GetMapping("/me")
-    public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
-        UserResponse response = userService.getUserByEmail(authentication.getName());
-        return ResponseEntity.ok(response);
-    }
-
     @Operation(summary = "Get users by type")
     @GetMapping("/type/{userType}")
     public ResponseEntity<List<UserResponse>> getUsersByType(@PathVariable UserType userType) {
         List<UserResponse> response = userService.getUsersByType(userType);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get user by ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+        UserResponse response = userService.getUserById(id);
         return ResponseEntity.ok(response);
     }
 

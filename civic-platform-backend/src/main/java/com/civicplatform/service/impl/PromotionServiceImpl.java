@@ -29,6 +29,8 @@ public class PromotionServiceImpl implements PromotionService {
 
         long eventsAttended = eventParticipantRepository.countCompletedEventsByUser(userId);
 
+        user.setPoints((int) eventsAttended);
+
         // Update badge based on attendance
         Badge newBadge = calculateBadge(eventsAttended);
         if (newBadge != user.getBadge()) {

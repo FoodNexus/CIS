@@ -2,6 +2,7 @@ package com.civicplatform.service.impl;
 
 import com.civicplatform.dto.request.EventRequest;
 import com.civicplatform.dto.response.EventParticipantResponse;
+import com.civicplatform.dto.response.EventRegistrationStatusResponse;
 import com.civicplatform.dto.response.EventResponse;
 import com.civicplatform.entity.Event;
 import com.civicplatform.entity.EventParticipant;
@@ -226,9 +227,25 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventParticipantResponse> getParticipationsByUser(Long userId) {
-        List<EventParticipant> participations = eventParticipantRepository.findByUserId(userId);
+        List<EventParticipant> participations = eventParticipantRepository.findByUserIdWithEventAndUser(userId);
         return participations.stream()
                 .map(eventParticipantMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public EventRegistrationStatusResponse getRegistrationStatus(Long eventId, Long userId) {
+        return eventParticipantRepository.findByEventIdAndUserId(eventId, userId)
+                .map(ep -> {
+                    boolean active = ep.getStatus() != ParticipantStatus.CANCELLED;
+                    return EventRegistrationStatusResponse.builder()
+                            .registered(active)
+                            .status(ep.getStatus().name())
+                            .build();
+                })
+                .orElse(EventRegistrationStatusResponse.builder()
+                        .registered(false)
+                        .status(null)
+                        .build());
     }
 }

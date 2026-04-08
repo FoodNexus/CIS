@@ -2,6 +2,7 @@ package com.civicplatform.service;
 
 import com.civicplatform.dto.request.EventRequest;
 import com.civicplatform.dto.response.EventParticipantResponse;
+import com.civicplatform.dto.response.EventRegistrationStatusResponse;
 import com.civicplatform.dto.response.EventResponse;
 import com.civicplatform.enums.EventStatus;
 
@@ -22,4 +23,5 @@ public interface EventService {
     void checkInParticipant(Long eventId, Long userId);
     void confirmAttendance(Long eventId, Long userId, boolean organizerConfirmation);
     List<EventParticipantResponse> getParticipationsByUser(Long userId);
+    EventRegistrationStatusResponse getRegistrationStatus(Long eventId, Long userId);
 }

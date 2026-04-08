@@ -26,6 +26,16 @@ export interface ProjectFunding {
   fundedAt: string;
 }
 
+/** Matches backend ProjectFundingResponse (GET /projects/my-fundings) */
+export interface ProjectFundingHistory {
+  id: number;
+  projectId: number;
+  projectTitle: string;
+  amount: number;
+  fundDate: string;
+  paymentMethod?: string;
+}
+
 export interface ProjectRequest {
   title: string;
   description?: string;
@@ -69,7 +79,11 @@ export class ProjectsService {
     return this.http.post<void>(`${this.API_URL}/${id}/vote`, {});
   }
 
-  fundProject(fundingData: ProjectFundingRequest): Observable<ProjectFunding> {
-    return this.http.post<ProjectFunding>(`${this.API_URL}/${fundingData.projectId}/fund`, fundingData);
+  fundProject(fundingData: ProjectFundingRequest): Observable<void> {
+    return this.http.post<void>(`${this.API_URL}/${fundingData.projectId}/fund`, fundingData);
+  }
+
+  getMyFundings(): Observable<ProjectFundingHistory[]> {
+    return this.http.get<ProjectFundingHistory[]>(`${this.API_URL}/my-fundings`);
   }
 }

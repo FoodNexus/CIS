@@ -33,6 +33,11 @@ export interface Event {
   capacityPercentage?: number;
 }
 
+export interface EventRegistrationStatus {
+  registered: boolean;
+  status: string | null;
+}
+
 export interface EventParticipation {
   id: number;
   registeredAt: string;
@@ -96,5 +101,9 @@ export class EventsService {
 
   getMyParticipations(): Observable<EventParticipation[]> {
     return this.http.get<EventParticipation[]>(`${this.API_URL}/my-participations`);
+  }
+
+  getRegistrationStatus(eventId: number): Observable<EventRegistrationStatus> {
+    return this.http.get<EventRegistrationStatus>(`${this.API_URL}/${eventId}/registration`);
   }
 }
