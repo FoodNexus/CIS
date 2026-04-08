@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { EventsService, Event } from '@core/services/events.service';
+import { AuthService } from '@core/services/auth.service';
+import { EventsService, Event, EventStatus } from '@core/services/events.service';
 
 @Component({
   selector: 'app-event-detail',
@@ -11,18 +12,23 @@ import { EventsService, Event } from '@core/services/events.service';
   styleUrls: ['./event-detail.component.scss']
 })
 export class EventDetailComponent implements OnInit {
+  readonly EventStatus = EventStatus;
+
   event: Event | null = null;
   isLoading = false;
   errorMessage = '';
   registrationLoading = false;
   actionMessage = '';
 
+  statusLoading = false;
+
   isRegistered = false;
   registrationStatus: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
-    private eventsService: EventsService
+    private eventsService: EventsService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -95,6 +101,30 @@ export class EventDetailComponent implements OnInit {
       error: (error) => {
         this.registrationLoading = false;
         this.actionMessage = error.error?.message || 'Could not cancel';
+      }
+    });
+  }
+
+  isOrganizer(): boolean {
+    if (!this.event?.organizerId) return false;
+    const u = this.authService.getCurrentUser();
+    return u != null && u.id === this.event.organizerId;
+  }
+
+  transitionStatus(status: EventStatus): void {
+    if (!this.event) return;
+    this.statusLoading = true;
+    this.actionMessage = '';
+    this.eventsService.transitionEventStatus(this.event.id, status).subscribe({
+      next: (ev) => {
+        this.event = ev;
+        this.statusLoading = false;
+        this.actionMessage = 'Event status updated.';
+        this.loadRegistrationStatus(ev.id);
+      },
+      error: (err) => {
+        this.statusLoading = false;
+        this.actionMessage = err.error?.message || 'Could not update status';
       }
     });
   }

@@ -24,4 +24,8 @@ public interface ProjectFundingRepository extends JpaRepository<ProjectFunding, 
     
     @Query("SELECT COUNT(pf) FROM ProjectFunding pf WHERE pf.user.id = :userId")
     long countFundingsByUser(Long userId);
+
+    /** Sum of all project donations (all statuses) — source of truth for admin funding totals. */
+    @Query("SELECT COALESCE(SUM(pf.amount), 0) FROM ProjectFunding pf")
+    BigDecimal sumAllFundingAmounts();
 }

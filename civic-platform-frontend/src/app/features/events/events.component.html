@@ -7,7 +7,7 @@
       <h3 class="font-bold">{{ event.title }}</h3>
       <p class="text-sm text-gray-600">{{ event.date | date }}</p>
       <span class="px-2 py-1 rounded text-xs" [ngClass]="getStatusColor(event.status)">{{ event.status }}</span>
-      <a [routerLink]="['/events', event.id]" class="block mt-2 text-indigo-600">View Details →</a>
+      <a [routerLink]="['/events', event.id]" class="block mt-2 text-emerald-600">View Details →</a>
     </div>
   </div>
 </div>

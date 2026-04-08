@@ -10,6 +10,8 @@ public interface PostService {
     PostResponse createPost(PostRequest postRequest, Long authorId);
     PostResponse getPostById(Long id);
     List<PostResponse> getAllPosts();
+
+    List<PostResponse> getPostsByCreator(String creator);
     List<PostResponse> getPostsByStatus(PostStatus status);
     List<PostResponse> getPostsByCampaign(Long campaignId);
     PostResponse updatePost(Long id, PostRequest postRequest);

@@ -1,24 +1,78 @@
-<div class="container mx-auto px-4 py-8">
-  <a routerLink="/campaigns" class="text-indigo-600">← Back to Campaigns</a>
-  <h1 class="text-2xl font-bold mt-4">Create Campaign</h1>
-  <form [formGroup]="campaignForm" (ngSubmit)="onSubmit()" class="max-w-lg mt-4">
-    <div class="mb-4">
-      <label class="block text-sm font-medium">Name</label>
-      <input type="text" formControlName="name" class="w-full border rounded px-3 py-2">
-    </div>
-    <div class="mb-4">
-      <label class="block text-sm font-medium">Type</label>
-      <select formControlName="type" class="w-full border rounded px-3 py-2">
-        <option *ngFor="let type of campaignTypes" [value]="type">{{ type }}</option>
-      </select>
-    </div>
-    <div class="mb-4">
-      <label class="block text-sm font-medium">Description</label>
-      <textarea formControlName="description" class="w-full border rounded px-3 py-2"></textarea>
-    </div>
-    <button type="submit" [disabled]="isLoading" class="bg-indigo-600 text-white px-4 py-2 rounded">
-      {{ isLoading ? 'Creating...' : 'Create Campaign' }}
-    </button>
-    <div *ngIf="errorMessage" class="text-red-600 mt-2">{{ errorMessage }}</div>
-  </form>
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-50 py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-2xl mx-auto">
+    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+      <a routerLink="/campaigns" class="hover:text-emerald-600 transition-colors">← Campagnes</a>
+    </nav>
+
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ isEdit ? 'Modifier la campagne' : 'Nouvelle campagne' }}</h1>
+
+    <form [formGroup]="campaignForm" (ngSubmit)="onSubmit()" class="bg-white rounded-2xl shadow-md border border-gray-100 p-6 space-y-5">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Nom <span class="text-red-500">*</span></label>
+        <input type="text" formControlName="name" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+        <p *ngIf="campaignForm.get('name')?.touched && campaignForm.get('name')?.hasError('required')" class="text-red-600 text-xs mt-1">Requis</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Type <span class="text-red-500">*</span></label>
+        <select formControlName="type" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500 bg-white">
+          <option *ngFor="let type of campaignTypes" [value]="type">{{ type }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-red-500">*</span></label>
+        <textarea formControlName="description" rows="4" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"></textarea>
+        <p *ngIf="campaignForm.get('description')?.touched && campaignForm.get('description')?.hasError('required')" class="text-red-600 text-xs mt-1">Requis</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Hashtag</label>
+        <input type="text" formControlName="hashtag" placeholder="#MaCampagne" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Montant nécessaire (TND) <span class="text-red-500">*</span></label>
+        <input type="number" step="1" min="1" formControlName="neededAmount" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+        <p *ngIf="campaignForm.get('neededAmount')?.touched && campaignForm.get('neededAmount')?.invalid" class="text-red-600 text-xs mt-1">Indiquez un montant ≥ 1 TND</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Objectif kg (optionnel)</label>
+          <input type="number" min="0" formControlName="goalKg" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Objectif repas (optionnel)</label>
+          <input type="number" min="0" formControlName="goalMeals" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Date de début <span class="text-red-500">*</span></label>
+          <input type="date" formControlName="startDate" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Date de fin <span class="text-red-500">*</span></label>
+          <input type="date" formControlName="endDate" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+        </div>
+      </div>
+      <p *ngIf="campaignForm.hasError('dateOrder') && campaignForm.touched" class="text-red-600 text-sm">La date de fin doit être après la date de début.</p>
+
+      <div class="flex flex-wrap gap-3 pt-2">
+        <button
+          type="submit"
+          [disabled]="isLoading"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50">
+          {{ isLoading ? '…' : 'Enregistrer' }}
+        </button>
+        <button type="button" (click)="cancel()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+          Annuler
+        </button>
+      </div>
+
+      <div *ngIf="errorMessage" class="text-red-600 text-sm">{{ errorMessage }}</div>
+    </form>
+  </div>
 </div>

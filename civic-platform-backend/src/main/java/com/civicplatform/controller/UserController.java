@@ -4,13 +4,19 @@ import com.civicplatform.dto.request.ProfileUpdateRequest;
 import com.civicplatform.dto.request.UserRequest;
 import com.civicplatform.dto.response.UserResponse;
 import com.civicplatform.enums.UserType;
+import com.civicplatform.entity.User;
+import com.civicplatform.repository.UserRepository;
+import com.civicplatform.service.QrCodeService;
 import com.civicplatform.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +30,8 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
+    private final QrCodeService qrCodeService;
 
     @Operation(summary = "Create a new user")
     @PostMapping
@@ -37,6 +45,23 @@ public class UserController {
     public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
         UserResponse response = userService.getUserByEmail(authentication.getName());
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Download PNG QR code with user identity JSON")
+    @GetMapping("/{id}/qrcode")
+    public ResponseEntity<byte[]> getUserQrCode(@PathVariable Long id, Authentication authentication) {
+        User authUser = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new AccessDeniedException("User not resolved"));
+        boolean isAdmin = authUser.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        if (!isAdmin && !authUser.getId().equals(id)) {
+            throw new AccessDeniedException("You can only access your own QR code");
+        }
+        byte[] qrCode = qrCodeService.generateQrCode(id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"qrcode-user-" + id + ".png\"")
+                .contentType(MediaType.IMAGE_PNG)
+                .body(qrCode);
     }
 
     @Operation(summary = "Get user by email")

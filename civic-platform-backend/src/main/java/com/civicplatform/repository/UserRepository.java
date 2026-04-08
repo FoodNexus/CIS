@@ -4,8 +4,10 @@ import com.civicplatform.entity.User;
 import com.civicplatform.enums.UserType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +28,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.userType = 'CITIZEN' AND " +
            "(SELECT COUNT(ep) FROM EventParticipant ep WHERE ep.user.id = u.id AND ep.status = 'COMPLETED') >= 3")
     List<User> findCitizensEligibleForAmbassadorPromotion();
+
+    @Query("SELECT u FROM User u WHERE u.createdAt BETWEEN :from AND :to" +
+           " AND (:type IS NULL OR u.userType = :type)")
+    List<User> findByDateRangeAndType(
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to,
+            @Param("type") UserType type);
 }

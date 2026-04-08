@@ -79,6 +79,11 @@ export class ProjectsService {
     return this.http.post<void>(`${this.API_URL}/${id}/vote`, {});
   }
 
+  /** Whether the current user has already voted for this project (requires auth). */
+  hasVoted(id: number): Observable<boolean> {
+    return this.http.get<boolean>(`${this.API_URL}/${id}/has-voted`);
+  }
+
   fundProject(fundingData: ProjectFundingRequest): Observable<void> {
     return this.http.post<void>(`${this.API_URL}/${fundingData.projectId}/fund`, fundingData);
   }

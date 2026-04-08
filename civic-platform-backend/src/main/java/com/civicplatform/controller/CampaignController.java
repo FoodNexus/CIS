@@ -110,6 +110,13 @@ public class CampaignController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Whether current user has voted for this campaign")
+    @GetMapping("/{id}/has-voted")
+    public ResponseEntity<Boolean> hasVoted(@PathVariable Long id, Authentication authentication) {
+        Long userId = getUserIdFromAuthentication(authentication);
+        return ResponseEntity.ok(campaignService.hasUserVoted(id, userId));
+    }
+
     @Operation(summary = "Activate campaigns ready for activation")
     @PostMapping("/activate-ready")
     @PreAuthorize("hasRole('ADMIN')")

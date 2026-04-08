@@ -5,6 +5,7 @@ import com.civicplatform.enums.CampaignStatus;
 import com.civicplatform.enums.UserType;
 import com.civicplatform.repository.CampaignRepository;
 import com.civicplatform.repository.ImpactMetricsRepository;
+import com.civicplatform.repository.ProjectFundingRepository;
 import com.civicplatform.repository.ProjectRepository;
 import com.civicplatform.repository.UserRepository;
 import com.civicplatform.service.DashboardService;
@@ -23,6 +24,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final UserRepository userRepository;
     private final CampaignRepository campaignRepository;
     private final ProjectRepository projectRepository;
+    private final ProjectFundingRepository projectFundingRepository;
     private final ImpactMetricsRepository impactMetricsRepository;
 
     @Override
@@ -41,10 +43,12 @@ public class DashboardServiceImpl implements DashboardService {
         totalCampaignsByStatus.put("COMPLETED", campaignRepository.countByStatus(CampaignStatus.COMPLETED));
         totalCampaignsByStatus.put("CANCELLED", campaignRepository.countByStatus(CampaignStatus.CANCELLED));
 
-        // Project statistics
+        // Project statistics — total funding = sum of all rows in project_funding (donations), not only COMPLETED projects
         Long totalProjects = projectRepository.count();
-        BigDecimal totalFundingAmount = projectRepository.sumCompletedProjectAmounts() != null ? 
-                projectRepository.sumCompletedProjectAmounts() : BigDecimal.ZERO;
+        BigDecimal totalFundingAmount = projectFundingRepository.sumAllFundingAmounts();
+        if (totalFundingAmount == null) {
+            totalFundingAmount = BigDecimal.ZERO;
+        }
 
         // Impact metrics (get latest)
         impactMetricsRepository.findMetricsSince(LocalDate.now().minusDays(30))

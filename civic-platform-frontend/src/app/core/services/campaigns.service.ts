@@ -81,6 +81,10 @@ export class CampaignsService {
     return this.http.post<void>(`${this.API_URL}/${id}/vote`, {});
   }
 
+  hasVoted(id: number): Observable<boolean> {
+    return this.http.get<boolean>(`${this.API_URL}/${id}/has-voted`);
+  }
+
   launchCampaign(id: number): Observable<Campaign> {
     return this.http.post<Campaign>(`${this.API_URL}/${id}/launch`, {});
   }

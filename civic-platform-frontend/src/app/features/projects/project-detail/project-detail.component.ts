@@ -1,8 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { EMPTY, Subscription } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { ProjectsService, Project } from '@core/services/projects.service';
+import { AuthService } from '@core/services/auth.service';
+import { ProjectVoteStateService } from '@core/services/project-vote-state.service';
 
 @Component({
   selector: 'app-project-detail',
@@ -11,7 +20,7 @@ import { ProjectsService, Project } from '@core/services/projects.service';
   templateUrl: './project-detail.component.html',
   styleUrls: ['./project-detail.component.scss']
 })
-export class ProjectDetailComponent implements OnInit {
+export class ProjectDetailComponent implements OnInit, OnDestroy {
   project: Project | null = null;
   isLoading = false;
   errorMessage = '';
@@ -20,10 +29,18 @@ export class ProjectDetailComponent implements OnInit {
   donateForm: FormGroup;
   isDonating = false;
   donateSuccess = false;
+  hasVoted = false;
+  isVoting = false;
+
+  private voteSyncSub?: Subscription;
+  private routeSub?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private projectsService: ProjectsService,
+    public readonly voteState: ProjectVoteStateService,
+    private authService: AuthService,
+    private cd: ChangeDetectorRef,
     private fb: FormBuilder
   ) {
     this.donateForm = this.fb.group({
@@ -36,22 +53,108 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.loadProject(Number(id));
-    }
-  }
+    this.voteSyncSub = this.voteState.changes.subscribe(() => {
+      const id = this.project?.id;
+      if (id != null && this.voteState.hasLoaded(id)) {
+        this.hasVoted = this.voteState.isVoted(id);
+        this.cd.markForCheck();
+      }
+    });
 
-  loadProject(id: number): void {
-    this.isLoading = true;
-    this.projectsService.getProjectById(id).subscribe({
-      next: (project) => {
+    this.routeSub = this.route.paramMap
+      .pipe(
+        switchMap((params) => {
+          const idStr = params.get('id');
+          if (!idStr) {
+            return EMPTY;
+          }
+          const id = Number(idStr);
+          this.isLoading = true;
+          this.errorMessage = '';
+          this.project = null;
+          this.cd.markForCheck();
+          return this.projectsService.getProjectById(id).pipe(
+            map((project) => ({ project, id })),
+            catchError((error) => {
+              this.errorMessage =
+                error.error?.message || 'Failed to load project';
+              this.isLoading = false;
+              this.cd.markForCheck();
+              return EMPTY;
+            })
+          );
+        })
+      )
+      .subscribe(({ project, id }) => {
         this.project = project;
         this.isLoading = false;
+        this.applyVoteFlagFromServer(id);
+        this.cd.markForCheck();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.voteSyncSub?.unsubscribe();
+    this.routeSub?.unsubscribe();
+  }
+
+  /**
+   * Prefer shared state (e.g. user voted from list) so list/detail never disagree;
+   * otherwise load from GET /has-voted once.
+   */
+  private applyVoteFlagFromServer(projectId: number): void {
+    if (!this.authService.isLoggedIn()) {
+      this.hasVoted = false;
+      this.cd.markForCheck();
+      return;
+    }
+    if (this.voteState.hasLoaded(projectId)) {
+      this.hasVoted = this.voteState.isVoted(projectId);
+      this.cd.markForCheck();
+      return;
+    }
+    this.projectsService.hasVoted(projectId).subscribe({
+      next: (v) => {
+        this.voteState.setFromServer(projectId, v);
+        this.hasVoted = v;
+        this.cd.markForCheck();
       },
-      error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to load project';
-        this.isLoading = false;
+      error: () => {
+        this.voteState.setFromServer(projectId, false);
+        this.hasVoted = false;
+        this.cd.markForCheck();
+      }
+    });
+  }
+
+  vote(): void {
+    if (!this.project || this.hasVoted || this.isVoting) {
+      return;
+    }
+    this.isVoting = true;
+    this.errorMessage = '';
+    const pid = this.project.id;
+    this.projectsService.voteForProject(pid).subscribe({
+      next: () => {
+        this.project!.voteCount = (this.project!.voteCount || 0) + 1;
+        this.voteState.markVoted(pid);
+        this.hasVoted = true;
+        this.isVoting = false;
+        this.cd.markForCheck();
+      },
+      error: (err: { status?: number; error?: { message?: string } }) => {
+        const msg = err.error?.message || 'Vote impossible.';
+        this.errorMessage = msg;
+        if (
+          err.status === 409 ||
+          err.status === 400 ||
+          /already voted|déjà voté/i.test(msg)
+        ) {
+          this.voteState.markVoted(pid);
+          this.hasVoted = true;
+        }
+        this.isVoting = false;
+        this.cd.markForCheck();
       }
     });
   }

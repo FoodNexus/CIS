@@ -28,4 +28,8 @@ export class UsersService {
   deleteUser(id: number): Observable<void> {
     return this.http.delete<void>(`${this.API_URL}/${id}`);
   }
+
+  downloadQrCodePng(userId: number): Observable<Blob> {
+    return this.http.get(`${this.API_URL}/${userId}/qrcode`, { responseType: 'blob' });
+  }
 }

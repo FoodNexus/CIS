@@ -167,6 +167,11 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
+    public boolean hasUserVoted(Long campaignId, Long userId) {
+        return campaignVoteRepository.findByUserIdAndCampaignId(userId, campaignId).isPresent();
+    }
+
+    @Override
     @Transactional
     public void activateCampaignsReadyForActivation() {
         List<Campaign> campaignsReady = campaignRepository.findCampaignsReadyForActivation();

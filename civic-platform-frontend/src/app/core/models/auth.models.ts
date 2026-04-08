@@ -18,6 +18,14 @@ export enum Badge {
   PLATINUM = 'PLATINUM'
 }
 
+export interface BadgeProgressInfo {
+  current_badge: string;
+  events_attended: number;
+  next_badge: string | null;
+  events_for_next: number | null;
+  events_remaining: number | null;
+}
+
 export interface User {
   id: number;
   userName: string;
@@ -28,6 +36,7 @@ export interface User {
   points: number;
   awardedDate?: string;
   createdAt: string;
+  badgeProgress?: BadgeProgressInfo;
   
   // Profile fields
   firstName?: string;
@@ -97,4 +106,6 @@ export interface AuthResponse {
   associationName?: string;
   contactName?: string;
   contactEmail?: string;
+
+  badgeProgress?: BadgeProgressInfo;
 }

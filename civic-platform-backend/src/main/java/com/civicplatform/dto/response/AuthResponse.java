@@ -39,4 +39,6 @@ public class AuthResponse {
     private String contactName;
     private String contactEmail;
     private LocalDate birthDate;
+
+    private BadgeProgressInfo badgeProgress;
 }

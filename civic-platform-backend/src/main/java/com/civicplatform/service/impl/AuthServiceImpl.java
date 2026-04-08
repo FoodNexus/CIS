@@ -12,6 +12,7 @@ import com.civicplatform.repository.RefreshTokenRepository;
 import com.civicplatform.repository.UserRepository;
 import com.civicplatform.security.JwtService;
 import com.civicplatform.service.AuthService;
+import com.civicplatform.service.UserResponseAssembler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserMapper userMapper;
+    private final UserResponseAssembler userResponseAssembler;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -133,27 +135,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private AuthResponse buildAuthResponse(User user, String accessToken, String refreshToken) {
-        return AuthResponse.builder()
-                .token(accessToken)
-                .refreshToken(refreshToken)
-                .userId(user.getId())
-                .userName(user.getUserName())
-                .email(user.getEmail())
-                .userType(user.getUserType())
-                .role(user.getRole())
-                .badge(user.getBadge())
-                .points(user.getPoints())
-                .awardedDate(user.getAwardedDate())
-                .createdAt(user.getCreatedAt())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .phone(user.getPhone())
-                .address(user.getAddress())
-                .companyName(user.getCompanyName())
-                .associationName(user.getAssociationName())
-                .contactName(user.getContactName())
-                .contactEmail(user.getContactEmail())
-                .birthDate(user.getBirthDate())
-                .build();
+        return userResponseAssembler.toAuthResponse(user, accessToken, refreshToken);
     }
 }

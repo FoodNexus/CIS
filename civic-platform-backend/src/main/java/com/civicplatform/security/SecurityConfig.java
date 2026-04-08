@@ -37,8 +37,11 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/admin/reports/**").hasRole("ADMIN")
                 .requestMatchers("/admin/dashboard").authenticated()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/users/*/qrcode").authenticated()
+                .requestMatchers("/events/*/attendance/*/certificate/pdf").authenticated()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

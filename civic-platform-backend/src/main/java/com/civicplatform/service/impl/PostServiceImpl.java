@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
@@ -28,7 +29,7 @@ public class PostServiceImpl implements PostService {
     private final PostMapper postMapper;
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public PostResponse createPost(PostRequest postRequest, Long authorId) {
         User author = userRepository.findById(authorId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + authorId));
@@ -56,29 +57,29 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<PostResponse> getAllPosts() {
         List<Post> posts = postRepository.findAll();
-        return posts.stream()
-                .map(postMapper::toResponse)
-                .collect(Collectors.toList());
+        return posts.stream().map(postMapper::toSummaryResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PostResponse> getPostsByCreator(String creator) {
+        List<Post> posts = postRepository.findByCreator(creator);
+        return posts.stream().map(postMapper::toSummaryResponse).collect(Collectors.toList());
     }
 
     @Override
     public List<PostResponse> getPostsByStatus(PostStatus status) {
         List<Post> posts = postRepository.findByStatus(status);
-        return posts.stream()
-                .map(postMapper::toResponse)
-                .collect(Collectors.toList());
+        return posts.stream().map(postMapper::toSummaryResponse).collect(Collectors.toList());
     }
 
     @Override
     public List<PostResponse> getPostsByCampaign(Long campaignId) {
         List<Post> posts = postRepository.findByCampaignId(campaignId);
-        return posts.stream()
-                .map(postMapper::toResponse)
-                .collect(Collectors.toList());
+        return posts.stream().map(postMapper::toSummaryResponse).collect(Collectors.toList());
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public PostResponse updatePost(Long id, PostRequest postRequest) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found with id: " + id));
@@ -96,7 +97,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public void deletePost(Long id) {
         if (!postRepository.existsById(id)) {
             throw new RuntimeException("Post not found with id: " + id);
@@ -105,7 +106,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public PostResponse approvePost(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found with id: " + id));
@@ -116,7 +117,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public PostResponse rejectPost(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found with id: " + id));

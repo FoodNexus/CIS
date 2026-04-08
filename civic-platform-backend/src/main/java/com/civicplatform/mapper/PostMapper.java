@@ -11,6 +11,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", uses = {CommentMapper.class})
 public interface PostMapper {
@@ -19,8 +20,23 @@ public interface PostMapper {
     @Mapping(target = "campaignName", source = "campaign.name")
     @Mapping(target = "comments", source = "comments")
     PostResponse toResponse(Post post);
-    
-    List<PostResponse> toResponseList(List<Post> posts);
+
+    /**
+     * List/summary payloads: do not map comments (avoids lazy-load / session issues and keeps responses small).
+     * Comments are loaded via {@code GET /comments/post/{id}} when needed.
+     */
+    @Mapping(target = "campaignId", source = "campaign.id")
+    @Mapping(target = "campaignName", source = "campaign.name")
+    @Mapping(target = "comments", ignore = true)
+    PostResponse toSummaryResponse(Post post);
+
+    @Named("mapPostListToSummary")
+    default List<PostResponse> mapPostListToSummary(List<Post> posts) {
+        if (posts == null) {
+            return null;
+        }
+        return posts.stream().map(this::toSummaryResponse).collect(Collectors.toList());
+    }
     
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

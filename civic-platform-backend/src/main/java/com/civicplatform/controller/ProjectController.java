@@ -65,6 +65,13 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Whether current user has voted for this project")
+    @GetMapping("/{id}/has-voted")
+    public ResponseEntity<Boolean> hasVoted(@PathVariable Long id, Authentication authentication) {
+        Long userId = getUserIdFromAuthentication(authentication);
+        return ResponseEntity.ok(projectService.hasUserVoted(id, userId));
+    }
+
     @Operation(summary = "Get project by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ProjectResponse> getProjectById(@PathVariable Long id) {

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, map } from 'rxjs';
-import { AuthResponse, LoginRequest, RegisterRequest, RefreshTokenRequest, User } from '../models/auth.models';
+import { ProjectVoteStateService } from './project-vote-state.service';
+import { AuthResponse, BadgeProgressInfo, LoginRequest, RegisterRequest, RefreshTokenRequest, User } from '../models/auth.models';
 import { ApiResponse } from '../models/common.models';
 
 @Injectable({
@@ -17,7 +18,10 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private projectVoteState: ProjectVoteStateService
+  ) {
     this.initializeAuthFromStorage();
   }
 
@@ -140,13 +144,32 @@ export class AuthService {
         companyName: p['companyName'] as string | undefined,
         associationName: p['associationName'] as string | undefined,
         contactName: p['contactName'] as string | undefined,
-        contactEmail: p['contactEmail'] as string | undefined
+        contactEmail: p['contactEmail'] as string | undefined,
+        badgeProgress: this.mapBadgeProgress(p)
       })),
       tap((user) => this.updateCurrentUser(user))
     );
   }
 
+  private mapBadgeProgress(p: Record<string, unknown>): BadgeProgressInfo | undefined {
+    const raw = (p['badgeProgress'] ?? p['badge_progress']) as Record<string, unknown> | undefined;
+    if (!raw) return undefined;
+    const attended = raw['events_attended'] ?? raw['eventsAttended'];
+    const next = raw['next_badge'] ?? raw['nextBadge'];
+    const forNext = raw['events_for_next'] ?? raw['eventsForNext'];
+    const remaining = raw['events_remaining'] ?? raw['eventsRemaining'];
+    const cur = raw['current_badge'] ?? raw['currentBadge'];
+    return {
+      current_badge: String(cur ?? ''),
+      events_attended: Number(attended ?? 0),
+      next_badge: next != null ? String(next) : null,
+      events_for_next: forNext != null ? Number(forNext) : null,
+      events_remaining: remaining != null ? Number(remaining) : null
+    };
+  }
+
   private handleAuthentication(response: AuthResponse): void {
+    const r = response as unknown as Record<string, unknown>;
     const user: User = {
       id: response.userId,
       userName: response.userName,
@@ -165,7 +188,8 @@ export class AuthService {
       companyName: response.companyName,
       associationName: response.associationName,
       contactName: response.contactName,
-      contactEmail: response.contactEmail
+      contactEmail: response.contactEmail,
+      badgeProgress: this.mapBadgeProgress(r)
     };
 
     localStorage.setItem(this.TOKEN_KEY, response.token);
@@ -180,6 +204,7 @@ export class AuthService {
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.currentUserSubject.next(null);
+    this.projectVoteState.clear();
   }
 
   updateCurrentUser(user: User): void {

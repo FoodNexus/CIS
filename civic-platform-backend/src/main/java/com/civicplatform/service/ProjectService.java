@@ -15,6 +15,8 @@ public interface ProjectService {
     ProjectResponse updateProject(Long id, ProjectRequest projectRequest);
     void deleteProject(Long id);
     void voteForProject(Long projectId, Long userId);
+
+    boolean hasUserVoted(Long projectId, Long userId);
     void fundProject(ProjectFundingRequest fundingRequest, Long userId);
     ProjectResponse completeProject(Long id, String finalReport);
     List<ProjectFundingResponse> getFundingsByUser(Long userId);

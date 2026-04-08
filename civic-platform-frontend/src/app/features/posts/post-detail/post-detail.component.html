@@ -1,10 +1,10 @@
-<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-50">
   <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
     <!-- Breadcrumb nav -->
     <div class="flex items-center gap-3 mb-6 text-sm">
       <a routerLink="/dashboard"
-         class="flex items-center gap-1 text-gray-500 hover:text-indigo-600 transition-colors font-medium">
+         class="flex items-center gap-1 text-gray-500 hover:text-emerald-600 transition-colors font-medium">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -15,7 +15,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
       </svg>
       <a routerLink="/posts"
-         class="text-gray-500 hover:text-indigo-600 transition-colors font-medium">
+         class="text-gray-500 hover:text-emerald-600 transition-colors font-medium">
         Community Posts
       </a>
       <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,7 +26,7 @@
 
     <!-- Loading -->
     <div *ngIf="isLoading" class="flex justify-center py-20">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600"></div>
     </div>
 
     <!-- Error -->
@@ -43,7 +43,7 @@
       <div class="p-6 pb-4">
         <div class="flex items-start justify-between gap-3 mb-4">
           <div class="flex items-center gap-3">
-            <div class="h-11 w-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
+            <div class="h-11 w-11 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
               {{ post.creator?.charAt(0)?.toUpperCase() || 'U' }}
             </div>
             <div>
@@ -129,7 +129,7 @@
             formControlName="content"
             rows="3"
             placeholder="Write a comment..."
-            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent placeholder-gray-400 bg-white">
+            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent placeholder-gray-400 bg-white">
           </textarea>
           <div class="flex items-center justify-between">
             <p *ngIf="errorMessage" class="text-xs text-red-600">{{ errorMessage }}</p>
@@ -137,7 +137,7 @@
               <button
                 type="submit"
                 [disabled]="commentForm.invalid || isSubmitting"
-                class="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                class="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 <svg *ngIf="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>

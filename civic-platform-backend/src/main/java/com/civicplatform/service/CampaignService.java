@@ -17,5 +17,7 @@ public interface CampaignService {
     CampaignResponse closeCampaign(Long id);
     CampaignResponse cancelCampaign(Long id);
     void voteForCampaign(Long campaignId, Long userId);
+
+    boolean hasUserVoted(Long campaignId, Long userId);
     void activateCampaignsReadyForActivation();
 }

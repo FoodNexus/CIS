@@ -1,4 +1,4 @@
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-green-50 py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
 
     <!-- Step 1: User Type Selection -->
@@ -10,9 +10,9 @@
 
       <div class="space-y-4">
         <button (click)="selectUserType('CITIZEN')"
-          class="w-full flex items-center p-6 border-2 border-gray-200 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition-all group">
-          <div class="flex-shrink-0 h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200">
-            <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          class="w-full flex items-center p-6 border-2 border-gray-200 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 transition-all group">
+          <div class="flex-shrink-0 h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200">
+            <svg class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
@@ -39,7 +39,7 @@
       <div class="text-center mt-8">
         <p class="text-sm text-gray-600">
           Already have an account?
-          <a routerLink="/login" class="font-medium text-indigo-600 hover:text-indigo-500">Sign in</a>
+          <a routerLink="/login" class="font-medium text-emerald-600 hover:text-emerald-500">Sign in</a>
         </p>
       </div>
     </div>
@@ -83,14 +83,14 @@
           <div>
             <label class="block text-sm font-medium text-gray-700">First Name *</label>
             <input type="text" formControlName="firstName"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border px-3 py-2"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm border px-3 py-2"
               [class.border-red-500]="firstName?.invalid && firstName?.touched">
             <div *ngIf="firstName?.invalid && firstName?.touched" class="mt-1 text-xs text-red-600">Required</div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700">Last Name *</label>
             <input type="text" formControlName="lastName"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border px-3 py-2"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm border px-3 py-2"
               [class.border-red-500]="lastName?.invalid && lastName?.touched">
             <div *ngIf="lastName?.invalid && lastName?.touched" class="mt-1 text-xs text-red-600">Required</div>
           </div>
@@ -100,7 +100,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-700">Username *</label>
           <input type="text" formControlName="userName"
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border px-3 py-2"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm border px-3 py-2"
             [class.border-red-500]="userName?.invalid && userName?.touched">
           <div *ngIf="userName?.invalid && userName?.touched" class="mt-1 text-xs text-red-600">
             <span *ngIf="userName?.errors?.['required']">Username is required</span>
@@ -112,7 +112,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-700">Email *</label>
           <input type="email" formControlName="email"
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border px-3 py-2"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm border px-3 py-2"
             [class.border-red-500]="email?.invalid && email?.touched">
           <div *ngIf="email?.invalid && email?.touched" class="mt-1 text-xs text-red-600">
             <span *ngIf="email?.errors?.['required']">Email is required</span>
@@ -125,7 +125,7 @@
           <label class="block text-sm font-medium text-gray-700">Password *</label>
           <div class="relative">
             <input [type]="showPassword ? 'text' : 'password'" formControlName="password"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border px-3 py-2 pr-10"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm border px-3 py-2 pr-10"
               [class.border-red-500]="password?.invalid && password?.touched">
             <button type="button" (click)="togglePasswordVisibility()"
               class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 mt-1">
@@ -148,7 +148,7 @@
         <div *ngIf="userType === 'CITIZEN'">
           <label class="block text-sm font-medium text-gray-700">Birth Date *</label>
           <input type="date" formControlName="birthDate"
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border px-3 py-2"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm border px-3 py-2"
             [class.border-red-500]="birthDate?.invalid && birthDate?.touched">
           <div *ngIf="birthDate?.invalid && birthDate?.touched" class="mt-1 text-xs text-red-600">Birth date is required</div>
         </div>
@@ -172,7 +172,7 @@
         <!-- Submit -->
         <div class="pt-2">
           <button type="submit" [disabled]="isLoading"
-            class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+            class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed">
             <svg *ngIf="isLoading" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>

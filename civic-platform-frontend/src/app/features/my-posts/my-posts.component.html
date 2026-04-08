@@ -1,0 +1,188 @@
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-50 py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-3xl mx-auto">
+    <div class="flex flex-col space-y-1 mb-6">
+      <h1 class="text-3xl font-bold text-gray-900">Mes Publications</h1>
+      <p class="text-gray-500 text-sm">Gérez vos posts et interactions</p>
+    </div>
+
+    <div *ngIf="successMessage" class="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">
+      {{ successMessage }}
+    </div>
+
+    <!-- Toolbar -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div class="flex flex-wrap gap-3">
+        <select
+          [(ngModel)]="typeFilter"
+          class="rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+        >
+          <option value="">Tous les types</option>
+          <option *ngFor="let t of postTypes" [value]="t">{{ t }}</option>
+        </select>
+        <select
+          [(ngModel)]="statusFilter"
+          class="rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+        >
+          <option value="">Tous les statuts</option>
+          <option *ngFor="let s of postStatuses" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+        + Nouveau Post
+      </button>
+    </div>
+
+    <div *ngIf="isLoading" class="flex justify-center py-16">
+      <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600"></div>
+    </div>
+    <div *ngIf="errorMessage" class="bg-red-50 border-l-4 border-red-400 p-4 rounded mb-6 text-red-700">{{ errorMessage }}</div>
+
+    <!-- Feed -->
+    <div class="space-y-6" *ngIf="!isLoading">
+      <div
+        *ngFor="let post of filteredPosts"
+        [class.opacity-40]="removingId === post.id"
+        [class.transition-opacity]="removingId === post.id"
+        [class.duration-300]="removingId === post.id"
+        class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+        <div class="p-6">
+          <div class="flex items-start justify-between gap-3 mb-4">
+            <span [ngClass]="getTypePillClass(post.type)" class="text-xs font-medium px-2.5 py-1 rounded-full">{{ post.type }}</span>
+            <span [ngClass]="getStatusPillClass(post.status)" class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full">
+              <svg *ngIf="post.status === 'PENDING'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <svg *ngIf="post.status === 'ACCEPTED'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <svg *ngIf="post.status === 'REJECTED'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              {{ post.status }}
+            </span>
+          </div>
+          <p class="text-gray-800 whitespace-pre-wrap leading-relaxed">{{ post.content }}</p>
+          <p class="text-xs text-gray-400 mt-4">🕐 {{ formatRelative(post.createdAt) }}</p>
+          <div class="flex flex-wrap gap-6 mt-4 text-sm text-gray-600">
+            <span>❤️ {{ post.likesCount ?? 0 }} likes</span>
+            <span>💬 {{ commentsCount(post) }} commentaires</span>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-6">
+            <button type="button" (click)="openEditModal(post)" class="px-3 py-1.5 rounded-lg text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100">
+              Modifier
+            </button>
+            <button type="button" (click)="openDeleteModal(post)" class="px-3 py-1.5 rounded-lg text-sm font-medium text-red-700 bg-red-50 border border-red-200 hover:bg-red-100">
+              Supprimer
+            </button>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 px-6 py-3 bg-gray-50/80">
+          <button
+            type="button"
+            (click)="toggleComments(post)"
+            class="text-sm font-medium text-emerald-600 hover:text-emerald-800">
+            {{ expandedPostId === post.id ? 'Masquer les commentaires' : 'Voir les commentaires (' + commentsCount(post) + ')' }}
+          </button>
+
+          <div *ngIf="expandedPostId === post.id" class="mt-4 space-y-3">
+            <div *ngIf="commentsLoading[post.id]" class="text-sm text-gray-500">Chargement…</div>
+            <div *ngFor="let c of commentsByPostId[post.id]" class="text-sm border-b border-gray-100 pb-3 last:border-0">
+              <p class="font-medium text-gray-900">{{ c.authorName || 'Utilisateur' }}</p>
+              <p class="text-gray-600 mt-1">{{ c.content }}</p>
+              <p class="text-xs text-gray-400 mt-1">{{ c.createdAt | date:'short' }}</p>
+            </div>
+            <div class="pt-2">
+              <label class="block text-xs font-medium text-gray-500 mb-1">Ajouter un commentaire</label>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  [(ngModel)]="newCommentText[post.id]"
+                  class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  placeholder="Votre message…"
+                  (keyup.enter)="submitComment(post.id)"
+                />
+                <button
+                  type="button"
+                  (click)="submitComment(post.id)"
+                  [disabled]="commentSubmitLoading[post.id]"
+                  class="px-3 py-2 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50">
+                  Envoyer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="!isLoading && posts.length === 0" class="text-center py-16 bg-white rounded-xl border border-dashed border-gray-200">
+      <div class="text-4xl mb-4">📝</div>
+      <h2 class="text-lg font-semibold text-gray-900">Aucune publication</h2>
+      <p class="text-gray-500 text-sm mt-2 mb-6">Vous n'avez pas encore publié. Créez votre premier post !</p>
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700">
+        + Créer un post
+      </button>
+    </div>
+
+    <div *ngIf="!isLoading && posts.length > 0 && filteredPosts.length === 0" class="text-center py-12 text-gray-500 text-sm">
+      Aucun post ne correspond aux filtres sélectionnés.
+    </div>
+  </div>
+</div>
+
+<!-- Create / Edit modal -->
+<div
+  *ngIf="showModal"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+  (click)="closeModal()">
+  <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+    <h2 class="text-lg font-bold text-gray-900 mb-4">{{ editingPost ? 'Modifier le post' : 'Nouveau post' }}</h2>
+    <form [formGroup]="postForm" (ngSubmit)="submitPost()" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+        <select formControlName="type" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white">
+          <option *ngFor="let t of postTypes" [value]="t">{{ t }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contenu</label>
+        <textarea formControlName="content" rows="6" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
+        <p class="text-xs text-gray-500 mt-1">{{ contentLength }} / 1000</p>
+        <p *ngIf="postForm.get('content')?.touched && postForm.get('content')?.hasError('required')" class="text-red-600 text-xs mt-1">Requis</p>
+        <p *ngIf="postForm.get('content')?.touched && postForm.get('content')?.hasError('minlength')" class="text-red-600 text-xs mt-1">Au moins 10 caractères</p>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" (click)="closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200">Annuler</button>
+        <button
+          type="submit"
+          [disabled]="submitLoading"
+          class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50">
+          {{ submitLoading ? '…' : (editingPost ? 'Enregistrer' : 'Publier') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div
+  *ngIf="showDeleteModal && postToDelete"
+  class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40"
+  (click)="cancelDelete()">
+  <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
+    <h3 class="text-lg font-bold text-gray-900 mb-2">Supprimer ?</h3>
+    <p class="text-gray-600 text-sm mb-6">Êtes-vous sûr de vouloir supprimer ce post ?</p>
+    <div class="flex justify-end gap-3">
+      <button type="button" (click)="cancelDelete()" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200">Annuler</button>
+      <button
+        type="button"
+        (click)="confirmDelete()"
+        [disabled]="deleteLoading"
+        class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50">
+        {{ deleteLoading ? '…' : 'Supprimer' }}
+      </button>
+    </div>
+  </div>
+</div>

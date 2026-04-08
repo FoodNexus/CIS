@@ -43,4 +43,7 @@ public class UserResponse {
     
     // PARTICIPANT fields
     private Integer points;
+
+    /** Progress toward next badge (see BadgeService). */
+    private BadgeProgressInfo badgeProgress;
 }

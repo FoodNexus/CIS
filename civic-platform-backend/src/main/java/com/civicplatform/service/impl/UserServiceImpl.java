@@ -10,6 +10,8 @@ import com.civicplatform.enums.UserType;
 import com.civicplatform.mapper.UserMapper;
 import com.civicplatform.repository.EventParticipantRepository;
 import com.civicplatform.repository.UserRepository;
+import com.civicplatform.service.EmailService;
+import com.civicplatform.service.UserResponseAssembler;
 import com.civicplatform.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +29,9 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final UserResponseAssembler userResponseAssembler;
     private final EventParticipantRepository eventParticipantRepository;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -38,28 +42,28 @@ public class UserServiceImpl implements UserService {
         user.setBadge(null);
         user.setPoints(0);
         user = userRepository.save(user);
-        return userMapper.toResponse(user);
+        return userResponseAssembler.toUserResponse(user);
     }
 
     @Override
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        return userMapper.toResponse(user);
+        return userResponseAssembler.toUserResponse(user);
     }
 
     @Override
     public UserResponse getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
-        return userMapper.toResponse(user);
+        return userResponseAssembler.toUserResponse(user);
     }
 
     @Override
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();
         return users.stream()
-                .map(userMapper::toResponse)
+                .map(userResponseAssembler::toUserResponse)
                 .collect(Collectors.toList());
     }
 
@@ -67,7 +71,7 @@ public class UserServiceImpl implements UserService {
     public List<UserResponse> getUsersByType(UserType userType) {
         List<User> users = userRepository.findByUserType(userType);
         return users.stream()
-                .map(userMapper::toResponse)
+                .map(userResponseAssembler::toUserResponse)
                 .collect(Collectors.toList());
     }
 
@@ -101,7 +105,7 @@ public class UserServiceImpl implements UserService {
         }
 
         user = userRepository.save(user);
-        return userMapper.toResponse(user);
+        return userResponseAssembler.toUserResponse(user);
     }
 
     @Override
@@ -124,7 +128,7 @@ public class UserServiceImpl implements UserService {
         }
 
         user = userRepository.save(user);
-        return userMapper.toResponse(user);
+        return userResponseAssembler.toUserResponse(user);
     }
 
     @Override
@@ -146,9 +150,9 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Only CITIZEN users can be promoted to AMBASSADOR");
         }
 
-        long completedEventsCount = eventParticipantRepository.countCompletedEventsByUser(userId);
-        if (completedEventsCount < 3) {
-            throw new RuntimeException("User must have completed at least 3 events to be promoted to AMBASSADOR");
+        long completedEventsCount = eventParticipantRepository.countAttendedCompletedEventsByUser(userId);
+        if (completedEventsCount < 5) {
+            throw new RuntimeException("User must have completed at least 5 events to be promoted to AMBASSADOR");
         }
 
         user.setUserType(UserType.AMBASSADOR);
@@ -156,10 +160,9 @@ public class UserServiceImpl implements UserService {
         user.setAwardedDate(LocalDate.now());
 
         userRepository.save(user);
-        
+
+        emailService.sendAmbassadorPromotionEmail(user.getEmail(), user.getUserName());
         log.info("User {} has been promoted to AMBASSADOR with badge PLATINUM", user.getEmail());
-        
-        // TODO: Send congratulatory email
     }
 
     @Override

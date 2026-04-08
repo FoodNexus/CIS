@@ -1,6 +1,7 @@
 package com.civicplatform.controller;
 
 import com.civicplatform.dto.request.EventRequest;
+import com.civicplatform.dto.request.EventStatusUpdateRequest;
 import com.civicplatform.dto.response.EventParticipantResponse;
 import com.civicplatform.dto.response.EventRegistrationStatusResponse;
 import com.civicplatform.dto.response.EventResponse;
@@ -8,12 +9,15 @@ import com.civicplatform.entity.User;
 import com.civicplatform.enums.EventStatus;
 import com.civicplatform.enums.UserType;
 import com.civicplatform.repository.UserRepository;
+import com.civicplatform.service.CertificateService;
 import com.civicplatform.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +33,7 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
+    private final CertificateService certificateService;
     private final UserRepository userRepository;
 
     @Operation(summary = "Create a new event")
@@ -87,6 +92,39 @@ public class EventController {
             Authentication authentication) {
         Long userId = getUserIdFromAuthentication(authentication);
         EventRegistrationStatusResponse response = eventService.getRegistrationStatus(id, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Download PDF certificate of participation (completed attendance only)")
+    @GetMapping("/{eventId}/attendance/{userId}/certificate/pdf")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<byte[]> getParticipationCertificate(
+            @PathVariable Long eventId,
+            @PathVariable Long userId,
+            Authentication authentication) {
+        User authUser = getUserFromAuthentication(authentication);
+        boolean isAdmin = authUser.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        if (!isAdmin && !authUser.getId().equals(userId)) {
+            throw new AccessDeniedException("You can only download your own certificate");
+        }
+        byte[] pdf = certificateService.generateCertificate(eventId, userId);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"certificate-event-"
+                                + eventId + "-user-" + userId + ".pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
+
+    @Operation(summary = "Transition event status (triggers user-type lifecycle)")
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<EventResponse> transitionEventStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody EventStatusUpdateRequest body,
+            Authentication authentication) {
+        checkEventOwnership(id, authentication);
+        EventResponse response = eventService.transitionEventStatus(id, body.getStatus());
         return ResponseEntity.ok(response);
     }
 

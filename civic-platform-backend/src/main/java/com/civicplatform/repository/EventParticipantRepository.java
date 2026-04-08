@@ -25,8 +25,12 @@ public interface EventParticipantRepository extends JpaRepository<EventParticipa
     @Query("SELECT COUNT(ep) FROM EventParticipant ep WHERE ep.event.id = :eventId AND ep.status IN ('REGISTERED', 'CHECKED_IN')")
     long countActiveParticipants(Long eventId);
     
-    @Query("SELECT COUNT(ep) FROM EventParticipant ep WHERE ep.user.id = :userId AND ep.status = 'COMPLETED'")
-    long countCompletedEventsByUser(Long userId);
+    /**
+     * Attended events: participation COMPLETED and parent event COMPLETED (lifecycle finished).
+     */
+    @Query("SELECT COUNT(ep) FROM EventParticipant ep WHERE ep.user.id = :userId"
+            + " AND ep.status = 'COMPLETED' AND ep.event.status = 'COMPLETED'")
+    long countAttendedCompletedEventsByUser(@Param("userId") Long userId);
     
     void deleteByEventIdAndUserId(Long eventId, Long userId);
 }

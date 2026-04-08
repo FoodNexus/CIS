@@ -16,6 +16,8 @@ public interface EventService {
     List<EventResponse> getEventsByOrganizer(Long organizerId);
     List<EventResponse> getUpcomingEvents();
     EventResponse updateEvent(Long id, EventRequest eventRequest);
+
+    EventResponse transitionEventStatus(Long id, EventStatus newStatus);
     void deleteEvent(Long id);
     EventResponse cancelEvent(Long id);
     void registerForEvent(Long eventId, Long userId);

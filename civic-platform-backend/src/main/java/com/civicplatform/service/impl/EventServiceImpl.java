@@ -15,6 +15,7 @@ import com.civicplatform.mapper.EventParticipantMapper;
 import com.civicplatform.repository.EventParticipantRepository;
 import com.civicplatform.repository.EventRepository;
 import com.civicplatform.repository.UserRepository;
+import com.civicplatform.service.EventLifecycleService;
 import com.civicplatform.service.EventService;
 import com.civicplatform.service.PromotionService;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final EventParticipantMapper eventParticipantMapper;
     private final PromotionService promotionService;
+    private final EventLifecycleService eventLifecycleService;
 
     @Override
     @Transactional
@@ -101,6 +103,44 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
+    public EventResponse transitionEventStatus(Long id, EventStatus newStatus) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
+        EventStatus oldStatus = event.getStatus();
+        if (oldStatus == newStatus) {
+            return eventMapper.toResponse(event);
+        }
+        event.setStatus(newStatus);
+        event = eventRepository.save(event);
+        handleEventStatusTransition(event.getId(), oldStatus, event.getStatus());
+
+        if (newStatus == EventStatus.CANCELLED) {
+            List<EventParticipant> participants = eventParticipantRepository.findByEventIdOrderByRegisteredAtAsc(id);
+            for (EventParticipant participant : participants) {
+                participant.cancel();
+            }
+            eventParticipantRepository.saveAll(participants);
+        }
+
+        return eventMapper.toResponse(event);
+    }
+
+    private void handleEventStatusTransition(Long eventId, EventStatus oldStatus, EventStatus newStatus) {
+        if (oldStatus == newStatus) {
+            return;
+        }
+        if (newStatus == EventStatus.ONGOING) {
+            eventLifecycleService.onEventStarted(eventId);
+        }
+        if (newStatus == EventStatus.COMPLETED || newStatus == EventStatus.CANCELLED) {
+            if (oldStatus != EventStatus.COMPLETED && oldStatus != EventStatus.CANCELLED) {
+                eventLifecycleService.onEventCompleted(eventId);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
     public void deleteEvent(Long id) {
         if (!eventRepository.existsById(id)) {
             throw new RuntimeException("Event not found with id: " + id);
@@ -111,20 +151,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventResponse cancelEvent(Long id) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
-
-        event.cancel();
-        event = eventRepository.save(event);
-
-        // Cancel all registrations
-        List<EventParticipant> participants = eventParticipantRepository.findByEventIdOrderByRegisteredAtAsc(id);
-        for (EventParticipant participant : participants) {
-            participant.cancel();
-        }
-        eventParticipantRepository.saveAll(participants);
-
-        return eventMapper.toResponse(event);
+        return transitionEventStatus(id, EventStatus.CANCELLED);
     }
 
     @Override

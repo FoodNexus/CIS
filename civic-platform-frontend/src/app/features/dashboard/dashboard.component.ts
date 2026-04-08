@@ -89,6 +89,8 @@ export class DashboardComponent implements OnInit {
   // Like tracking for posts
   likedPosts = new Set<number>();
 
+  certificateLoadingKey: string | null = null;
+
   constructor(
     private authService: AuthService,
     private campaignsService: CampaignsService,
@@ -251,8 +253,21 @@ export class DashboardComponent implements OnInit {
   }
 
   // Badge progress — completed events attended (synced with server points after refresh)
+  /** Server-authoritative attended count (completed events only). */
+  getEventsAttendedDisplay(): number {
+    const bp = this.currentUser?.badgeProgress;
+    if (bp != null && typeof bp.events_attended === 'number') {
+      return bp.events_attended;
+    }
+    return this.currentUser?.points ?? this.eventsAttended;
+  }
+
   getNextBadgeThreshold(): number {
-    const n = this.eventsAttended;
+    const bp = this.currentUser?.badgeProgress;
+    if (bp?.events_for_next != null) {
+      return bp.events_for_next;
+    }
+    const n = this.getEventsAttendedDisplay();
     if (n >= 8) return 8;
     if (n >= 5) return 8;
     if (n >= 3) return 5;
@@ -261,7 +276,7 @@ export class DashboardComponent implements OnInit {
   }
 
   getBadgeProgressPercent(): number {
-    const n = this.eventsAttended;
+    const n = this.getEventsAttendedDisplay();
     if (n >= 8) return 100;
     const next = this.getNextBadgeThreshold();
     if (next <= 0) return 0;
@@ -280,6 +295,8 @@ export class DashboardComponent implements OnInit {
   }
 
   getNextBadge(): string {
+    const nb = this.currentUser?.badgeProgress?.next_badge;
+    if (nb) return nb;
     const current = this.getUserBadge();
     const badges = ['NONE', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM'];
     const currentIndex = badges.indexOf(current);
@@ -287,6 +304,14 @@ export class DashboardComponent implements OnInit {
       return badges[currentIndex + 1];
     }
     return 'PLATINUM';
+  }
+
+  getEventsRemainingForNextBadge(): number {
+    const r = this.currentUser?.badgeProgress?.events_remaining;
+    if (r != null) return r;
+    const next = this.getNextBadgeThreshold();
+    const n = this.getEventsAttendedDisplay();
+    return Math.max(0, next - n);
   }
 
   // Project funding progress
@@ -347,7 +372,7 @@ export class DashboardComponent implements OnInit {
     switch (type) {
       case 'EVENT_ANNOUNCEMENT':    return 'bg-blue-100 text-blue-800';
       case 'CAMPAIGN_ANNOUNCEMENT': return 'bg-green-100 text-green-800';
-      case 'TESTIMONIAL':           return 'bg-purple-100 text-purple-800';
+      case 'TESTIMONIAL':           return 'bg-emerald-100 text-emerald-800';
       default:                      return 'bg-gray-100 text-gray-700';
     }
   }
@@ -355,5 +380,28 @@ export class DashboardComponent implements OnInit {
   // Refresh data
   refreshData(): void {
     this.loadAllData();
+  }
+
+  certificateKey(p: EventParticipation): string {
+    return `${p.eventId}-${p.userId}`;
+  }
+
+  downloadParticipationCertificate(p: EventParticipation): void {
+    const key = this.certificateKey(p);
+    this.certificateLoadingKey = key;
+    this.eventsService.downloadParticipationCertificate(p.eventId, p.userId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `certificate-event-${p.eventId}-user-${p.userId}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.certificateLoadingKey = null;
+      },
+      error: () => {
+        this.certificateLoadingKey = null;
+      }
+    });
   }
 }

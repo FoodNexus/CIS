@@ -16,7 +16,10 @@ import { BadgeComponent } from './shared/components/badge/badge.component';
 export class AppComponent {
   title = 'Civic Platform';
   currentUser$: Observable<User | null>;
-  isSidebarOpen = false;
+  /** md+: narrow icon rail vs full labels */
+  sidebarCollapsed = false;
+  /** Small screens: slide-out drawer */
+  mobileMenuOpen = false;
   isUserMenuOpen = false;
 
   constructor(
@@ -26,8 +29,18 @@ export class AppComponent {
     this.currentUser$ = this.authService.currentUser$;
   }
 
-  toggleSidebar(): void {
-    this.isSidebarOpen = !this.isSidebarOpen;
+  /** Chevron in sidebar (desktop / tablet) */
+  toggleSidebarCollapsed(): void {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
+  /** Hamburger on small screens */
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen = false;
   }
 
   toggleUserMenu(): void {
@@ -41,6 +54,7 @@ export class AppComponent {
   logout(): void {
     this.authService.logout();
     this.isUserMenuOpen = false;
+    this.mobileMenuOpen = false;
     this.router.navigate(['/login']);
   }
 
@@ -66,5 +80,11 @@ export class AppComponent {
 
   isAdmin(): boolean {
     return this.authService.hasRole('ADMIN');
+  }
+
+  /** Login/register are full-screen: no top nav or sidebar (even if a session exists). */
+  isAuthPage(): boolean {
+    const path = this.router.url.split('?')[0];
+    return path === '/login' || path === '/register';
   }
 }

@@ -36,17 +36,25 @@ public class PostController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Get post by ID")
-    @GetMapping("/{id}")
-    public ResponseEntity<PostResponse> getPostById(@PathVariable Long id) {
-        PostResponse response = postService.getPostById(id);
-        return ResponseEntity.ok(response);
-    }
-
     @Operation(summary = "Get all posts")
     @GetMapping
     public ResponseEntity<List<PostResponse>> getAllPosts() {
         List<PostResponse> response = postService.getAllPosts();
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get current user's posts")
+    @GetMapping("/my")
+    public ResponseEntity<List<PostResponse>> getMyPosts(Authentication authentication) {
+        User user = getUserFromAuthentication(authentication);
+        List<PostResponse> response = postService.getPostsByCreator(user.getUserName());
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get post by ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<PostResponse> getPostById(@PathVariable Long id) {
+        PostResponse response = postService.getPostById(id);
         return ResponseEntity.ok(response);
     }
 
@@ -110,9 +118,12 @@ public class PostController {
     }
 
     private Long getUserIdFromAuthentication(Authentication authentication) {
+        return getUserFromAuthentication(authentication).getId();
+    }
+
+    private User getUserFromAuthentication(Authentication authentication) {
         String email = authentication.getName();
-        User user = userRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
-        return user.getId();
     }
 }

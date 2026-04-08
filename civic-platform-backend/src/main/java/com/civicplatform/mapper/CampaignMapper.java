@@ -19,7 +19,7 @@ public interface CampaignMapper {
     @Mapping(target = "createdById", source = "createdBy.id")
     @Mapping(target = "createdByName", expression = "java(campaign.getCreatedBy() != null ? campaign.getCreatedBy().getUserName() : null)")
     @Mapping(target = "voteCount", ignore = true)
-    @Mapping(target = "posts", source = "posts")
+    @Mapping(target = "posts", source = "posts", qualifiedByName = "mapPostListToSummary")
     CampaignResponse toResponse(Campaign campaign);
     
     List<CampaignResponse> toResponseList(List<Campaign> campaigns);

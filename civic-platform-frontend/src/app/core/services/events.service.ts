@@ -83,6 +83,10 @@ export class EventsService {
     return this.http.put<Event>(`${this.API_URL}/${id}`, eventData);
   }
 
+  transitionEventStatus(id: number, status: EventStatus): Observable<Event> {
+    return this.http.patch<Event>(`${this.API_URL}/${id}/status`, { status });
+  }
+
   deleteEvent(id: number): Observable<void> {
     return this.http.delete<void>(`${this.API_URL}/${id}`);
   }
@@ -105,5 +109,12 @@ export class EventsService {
 
   getRegistrationStatus(eventId: number): Observable<EventRegistrationStatus> {
     return this.http.get<EventRegistrationStatus>(`${this.API_URL}/${eventId}/registration`);
+  }
+
+  downloadParticipationCertificate(eventId: number, userId: number): Observable<Blob> {
+    return this.http.get(
+      `${this.API_URL}/${eventId}/attendance/${userId}/certificate/pdf`,
+      { responseType: 'blob' }
+    );
   }
 }

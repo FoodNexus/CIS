@@ -9,8 +9,11 @@ import com.civicplatform.entity.ProjectFunding;
 import com.civicplatform.entity.User;
 import com.civicplatform.mapper.ProjectFundingMapper;
 import com.civicplatform.mapper.ProjectMapper;
+import com.civicplatform.entity.ProjectVote;
+import com.civicplatform.entity.ProjectVoteId;
 import com.civicplatform.repository.ProjectFundingRepository;
 import com.civicplatform.repository.ProjectRepository;
+import com.civicplatform.repository.ProjectVoteRepository;
 import com.civicplatform.repository.UserRepository;
 import com.civicplatform.service.ProjectService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final ProjectFundingRepository projectFundingRepository;
+    private final ProjectVoteRepository projectVoteRepository;
     private final ProjectMapper projectMapper;
     private final ProjectFundingMapper projectFundingMapper;
 
@@ -97,15 +101,27 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional
     public void voteForProject(Long projectId, Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found with id: " + projectId));
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        if (projectVoteRepository.findByUserIdAndProjectId(userId, projectId).isPresent()) {
+            throw new RuntimeException("User has already voted for this project");
+        }
 
-        // TODO: Implement project voting with unique constraint
+        ProjectVote vote = new ProjectVote();
+        vote.setId(new ProjectVoteId(userId, projectId));
+        projectVoteRepository.saveAndFlush(vote);
+
         project.vote();
         projectRepository.save(project);
+    }
+
+    @Override
+    public boolean hasUserVoted(Long projectId, Long userId) {
+        return projectVoteRepository.findByUserIdAndProjectId(userId, projectId).isPresent();
     }
 
     @Override

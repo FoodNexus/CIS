@@ -40,6 +40,13 @@ export const routes: Routes = [
     canActivate: [AuthGuard, UserTypeGuard],
     data: { userTypes: [UserType.DONOR, UserType.AMBASSADOR] }
   },
+
+  {
+    path: 'campaigns/:id/edit',
+    loadComponent: () => import('./features/campaigns/campaign-form/campaign-form.component').then(m => m.CampaignFormComponent),
+    canActivate: [AuthGuard, UserTypeGuard],
+    data: { userTypes: [UserType.DONOR, UserType.AMBASSADOR] }
+  },
   
   {
     path: 'campaigns/:id',
@@ -85,6 +92,12 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
   
+  {
+    path: 'my-posts',
+    loadComponent: () => import('./features/my-posts/my-posts.component').then(m => m.MyPostsComponent),
+    canActivate: [AuthGuard]
+  },
+
   {
     path: 'posts',
     loadComponent: () => import('./features/posts/posts.component').then(m => m.PostsComponent),
