@@ -210,49 +210,15 @@
     <div *ngIf="isActiveTab('posts')" class="space-y-6">
       <div class="flex items-center justify-between">
         <h2 class="text-2xl font-bold text-gray-900">My Posts</h2>
-        <a routerLink="/posts/new" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a routerLink="/posts/new" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 shadow-sm transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
           New Post
         </a>
       </div>
       <div class="space-y-4">
-        <div *ngFor="let post of myPosts" class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-gray-100 p-6">
-          <div class="flex items-start space-x-4">
-            <div class="flex-shrink-0">
-              <div class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 flex items-center justify-center text-white font-medium">
-                {{ post.creator?.charAt(0)?.toUpperCase() || 'U' }}
-              </div>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900">{{ post.creator }}</p>
-              <p class="text-sm text-gray-500">{{ post.createdAt | date:'medium' }}</p>
-              <p class="mt-2 text-gray-700">{{ post.content }}</p>
-              <div class="mt-3 flex items-center space-x-6">
-                <span class="flex items-center text-sm text-gray-500">
-                  <svg class="w-4 h-4 mr-1 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
-                  </svg>
-                  {{ post.likesCount || 0 }}
-                </span>
-                <span class="flex items-center text-sm text-gray-500">
-                  <svg class="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  {{ post.comments?.length || 0 }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div *ngIf="myPosts.length === 0" class="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900">No posts yet</h3>
-          <p class="mt-1 text-sm text-gray-500">Share your thoughts with the community.</p>
-        </div>
+        <ng-container *ngTemplateOutlet="postCardList; context: { $implicit: myPosts }"></ng-container>
       </div>
     </div>
 
@@ -409,49 +375,15 @@
     <div *ngIf="isActiveTab('posts')" class="space-y-6">
       <div class="flex items-center justify-between">
         <h2 class="text-2xl font-bold text-gray-900">My Posts</h2>
-        <a routerLink="/posts/new" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a routerLink="/posts/new" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 shadow-sm transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
           New Post
         </a>
       </div>
       <div class="space-y-4">
-        <div *ngFor="let post of myPosts" class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-gray-100 p-6">
-          <div class="flex items-start space-x-4">
-            <div class="flex-shrink-0">
-              <div class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 flex items-center justify-center text-white font-medium">
-                {{ post.creator?.charAt(0)?.toUpperCase() || 'U' }}
-              </div>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900">{{ post.creator }}</p>
-              <p class="text-sm text-gray-500">{{ post.createdAt | date:'medium' }}</p>
-              <p class="mt-2 text-gray-700">{{ post.content }}</p>
-              <div class="mt-3 flex items-center space-x-6">
-                <span class="flex items-center text-sm text-gray-500">
-                  <svg class="w-4 h-4 mr-1 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
-                  </svg>
-                  {{ post.likesCount || 0 }}
-                </span>
-                <span class="flex items-center text-sm text-gray-500">
-                  <svg class="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  {{ post.comments?.length || 0 }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div *ngIf="myPosts.length === 0" class="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900">No posts yet</h3>
-          <p class="mt-1 text-sm text-gray-500">Share your thoughts with the community.</p>
-        </div>
+        <ng-container *ngTemplateOutlet="postCardList; context: { $implicit: myPosts }"></ng-container>
       </div>
     </div>
 
@@ -589,3 +521,80 @@
     </div>
   </div>
 </div>
+
+<!-- ===== Shared Post Card Template ===== -->
+<ng-template #postCardList let-posts>
+  <div *ngFor="let post of posts"
+       class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 overflow-hidden">
+
+    <!-- Header -->
+    <div class="p-5 pb-3">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+            {{ post.creator?.charAt(0)?.toUpperCase() || 'U' }}
+          </div>
+          <div class="min-w-0">
+            <p class="font-semibold text-gray-900 truncate">{{ post.creator }}</p>
+            <p class="text-xs text-gray-400">{{ post.createdAt | date:'MMM d, y, h:mm a' }}</p>
+          </div>
+        </div>
+        <span [class]="getPostTypeColor(post.type) + ' text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0'">
+          {{ formatPostType(post.type) }}
+        </span>
+      </div>
+      <p class="mt-3 text-gray-700 leading-relaxed whitespace-pre-line">{{ post.content }}</p>
+    </div>
+
+    <!-- Footer / Actions -->
+    <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+      <div class="flex items-center gap-5">
+
+        <!-- Like toggle -->
+        <button (click)="toggleLike(post)"
+                class="flex items-center gap-1.5 transition-colors group"
+                [class.text-red-500]="isLiked(post.id)"
+                [class.text-gray-500]="!isLiked(post.id)">
+          <svg class="w-5 h-5 transition-transform group-hover:scale-110"
+               [attr.fill]="isLiked(post.id) ? 'currentColor' : 'none'"
+               stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+          <span class="text-sm font-medium">{{ post.likesCount || 0 }}</span>
+        </button>
+
+        <!-- Comment count -->
+        <a [routerLink]="['/posts', post.id]"
+           class="flex items-center gap-1.5 text-gray-500 hover:text-indigo-600 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          <span class="text-sm font-medium">{{ post.comments?.length || 0 }}</span>
+        </a>
+
+      </div>
+      <a [routerLink]="['/posts', post.id]"
+         class="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+        View thread →
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="posts.length === 0"
+       class="text-center py-14 bg-white rounded-xl shadow-sm border border-gray-100">
+    <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+    </svg>
+    <h3 class="text-sm font-semibold text-gray-800">No posts yet</h3>
+    <p class="text-gray-400 text-sm mt-1">Share your thoughts with the community.</p>
+    <a routerLink="/posts/new"
+       class="mt-4 inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">
+      Write a post
+    </a>
+  </div>
+</ng-template>

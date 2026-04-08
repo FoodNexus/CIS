@@ -7,7 +7,7 @@ import { AuthService } from '@core/services/auth.service';
 import { BadgeComponent } from '@shared/components/badge/badge.component';
 import { CampaignsService, Campaign } from '@core/services/campaigns.service';
 import { EventsService, Event } from '@core/services/events.service';
-import { ProjectsService, Project, ProjectFunding } from '@core/services/projects.service';
+import { ProjectsService, Project } from '@core/services/projects.service';
 import { PostsService, Post } from '@core/services/posts.service';
 import { User, Badge } from '@core/models/auth.models';
 
@@ -89,6 +89,9 @@ export class DashboardComponent implements OnInit {
   // Badge progress
   eventsAttended = 0;
 
+  // Like tracking for posts
+  likedPosts = new Set<number>();
+
   constructor(
     private authService: AuthService,
     private campaignsService: CampaignsService,
@@ -124,17 +127,22 @@ export class DashboardComponent implements OnInit {
 
     forkJoin(requests).subscribe({
       next: (results: any[]) => {
+        const allPosts: Post[] = results[3] || [];
+        const currentUserName = this.currentUser?.userName;
+        // Only show the logged-in user's own posts in "My Posts"
+        this.myPosts = currentUserName
+          ? allPosts.filter(p => p.creator === currentUserName)
+          : allPosts;
+
         if (this.isDonor()) {
           this.myCampaigns = results[0] || [];
           this.myEvents = results[1] || [];
           this.myProjects = results[2] || [];
-          this.myPosts = results[3] || [];
           this.calculateImpactStats();
         } else {
           this.feedCampaigns = results[0] || [];
           this.feedEvents = results[1] || [];
           this.feedProjects = results[2] || [];
-          this.myPosts = results[3] || [];
         }
         this.isLoading = false;
       },
@@ -273,6 +281,42 @@ export class DashboardComponent implements OnInit {
       case 'COMPLETED': return 'bg-blue-100 text-blue-800';
       case 'CANCELLED': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  // Post helpers
+  toggleLike(post: Post): void {
+    if (this.likedPosts.has(post.id)) {
+      this.postsService.unlikePost(post.id).subscribe({
+        next: () => {
+          post.likesCount = Math.max(0, post.likesCount - 1);
+          this.likedPosts.delete(post.id);
+        }
+      });
+    } else {
+      this.postsService.likePost(post.id).subscribe({
+        next: () => {
+          post.likesCount++;
+          this.likedPosts.add(post.id);
+        }
+      });
+    }
+  }
+
+  isLiked(postId: number): boolean {
+    return this.likedPosts.has(postId);
+  }
+
+  formatPostType(type: string): string {
+    return type?.replace(/_/g, ' ') || '';
+  }
+
+  getPostTypeColor(type: string): string {
+    switch (type) {
+      case 'EVENT_ANNOUNCEMENT':    return 'bg-blue-100 text-blue-800';
+      case 'CAMPAIGN_ANNOUNCEMENT': return 'bg-green-100 text-green-800';
+      case 'TESTIMONIAL':           return 'bg-purple-100 text-purple-800';
+      default:                      return 'bg-gray-100 text-gray-700';
     }
   }
 
