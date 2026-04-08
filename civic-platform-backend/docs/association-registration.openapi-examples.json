@@ -1,0 +1,150 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Association (DONOR) registration — mock examples",
+    "description": "POST /api/auth/register with userType DONOR. Backend: UserRequest + @ValidUser (associationName, companyName, contactName, contactEmail required for DONOR).",
+    "version": "1.0.0"
+  },
+  "servers": [{ "url": "http://localhost:8081/api" }],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register association representative (DONOR)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserRequestDonor" },
+              "examples": {
+                "greenfork_food_bank": {
+                  "summary": "GreenFork Food Bank",
+                  "value": {
+                    "userName": "greenfork_admin",
+                    "email": "admin@greenfork-food.org",
+                    "password": "SecurePass1!",
+                    "userType": "DONOR",
+                    "firstName": "Amélie",
+                    "lastName": "Bernard",
+                    "phone": "+33 6 12 34 56 78",
+                    "address": "12 Rue des Lilas, 75011 Paris, France",
+                    "associationName": "GreenFork Food Bank",
+                    "companyName": "GreenFork Association",
+                    "contactName": "Amélie Bernard",
+                    "contactEmail": "contact@greenfork-food.org"
+                  }
+                },
+                "urban_garden_collective": {
+                  "summary": "Urban Garden Collective",
+                  "value": {
+                    "userName": "urban_garden_ops",
+                    "email": "ops@urbangarden.lyon.fr",
+                    "password": "SecurePass2!",
+                    "userType": "DONOR",
+                    "firstName": "Karim",
+                    "lastName": "Haddad",
+                    "phone": "+33 4 78 90 12 34",
+                    "address": "45 Cours Gambetta, 69007 Lyon, France",
+                    "associationName": "Urban Garden Collective",
+                    "companyName": "Jardins Urbains SAS",
+                    "contactName": "Karim Haddad",
+                    "contactEmail": "contact@urbangarden.lyon.fr"
+                  }
+                },
+                "coastal_cleanup_crew": {
+                  "summary": "Coastal Cleanup Crew",
+                  "value": {
+                    "userName": "coastal_cc_marie",
+                    "email": "marie.dupont@coastalcleanup.fr",
+                    "password": "SecurePass3!",
+                    "userType": "DONOR",
+                    "firstName": "Marie",
+                    "lastName": "Dupont",
+                    "phone": "+33 6 98 76 54 32",
+                    "address": "8 Quai des Docks, 13002 Marseille, France",
+                    "associationName": "Coastal Cleanup Crew",
+                    "companyName": "CCC Environnement",
+                    "contactName": "Marie Dupont",
+                    "contactEmail": "partners@coastalcleanup.fr"
+                  }
+                },
+                "youth_code_lab": {
+                  "summary": "Youth Code Lab",
+                  "value": {
+                    "userName": "ycl_toulouse",
+                    "email": "hello@youthcodelab.org",
+                    "password": "SecurePass4!",
+                    "userType": "DONOR",
+                    "firstName": "Lucas",
+                    "lastName": "Moreau",
+                    "phone": "+33 5 61 22 33 44",
+                    "address": "22 Allée Jean Jaurès, 31000 Toulouse, France",
+                    "associationName": "Youth Code Lab",
+                    "companyName": "YCL Éducation Numérique",
+                    "contactName": "Lucas Moreau",
+                    "contactEmail": "contact@youthcodelab.org"
+                  }
+                },
+                "refugee_welcome_net": {
+                  "summary": "Refugee Welcome Network",
+                  "value": {
+                    "userName": "rwn_strasbourg",
+                    "email": "coord@refugeewelcome-net.eu",
+                    "password": "SecurePass5!",
+                    "userType": "DONOR",
+                    "firstName": "Sofia",
+                    "lastName": "Petrov",
+                    "phone": "+33 3 88 11 22 33",
+                    "address": "5 Place Kléber, 67000 Strasbourg, France",
+                    "associationName": "Refugee Welcome Network",
+                    "companyName": "RWN Solidarité",
+                    "contactName": "Sofia Petrov",
+                    "contactEmail": "partners@refugeewelcome-net.eu"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created — AuthResponse with JWT"
+          },
+          "400": { "description": "Validation error" },
+          "409": { "description": "Email or username already exists" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserRequestDonor": {
+        "type": "object",
+        "required": [
+          "userName",
+          "email",
+          "password",
+          "userType",
+          "associationName",
+          "companyName",
+          "contactName",
+          "contactEmail"
+        ],
+        "properties": {
+          "userName": { "type": "string", "minLength": 3, "maxLength": 50 },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 6 },
+          "userType": { "type": "string", "enum": ["DONOR"] },
+          "role": { "type": "string", "enum": ["USER", "ADMIN"], "default": "USER" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "phone": { "type": "string" },
+          "address": { "type": "string" },
+          "associationName": { "type": "string" },
+          "companyName": { "type": "string" },
+          "contactName": { "type": "string" },
+          "contactEmail": { "type": "string", "format": "email" }
+        }
+      }
+    }
+  }
+}
