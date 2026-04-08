@@ -29,6 +29,7 @@ export class PostsComponent implements OnInit {
       next: (posts) => {
         this.posts = posts;
         this.isLoading = false;
+        this.initLikeStates(posts);
       },
       error: (error) => {
         this.errorMessage = error.status === 0
@@ -36,6 +37,15 @@ export class PostsComponent implements OnInit {
           : (error.error?.message || 'Failed to load posts');
         this.isLoading = false;
       }
+    });
+  }
+
+  private initLikeStates(posts: Post[]): void {
+    posts.forEach(post => {
+      this.postsService.checkLike(post.id).subscribe({
+        next: (liked) => { if (liked) this.likedPosts.add(post.id); },
+        error: () => {}
+      });
     });
   }
 

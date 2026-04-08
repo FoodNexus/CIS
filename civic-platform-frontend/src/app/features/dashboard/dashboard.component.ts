@@ -134,6 +134,14 @@ export class DashboardComponent implements OnInit {
           ? allPosts.filter(p => p.creator === currentUserName)
           : allPosts;
 
+        // Seed the liked set so hearts are red for already-liked posts
+        this.myPosts.forEach(post => {
+          this.postsService.checkLike(post.id).subscribe({
+            next: (liked) => { if (liked) this.likedPosts.add(post.id); },
+            error: () => {}
+          });
+        });
+
         if (this.isDonor()) {
           this.myCampaigns = results[0] || [];
           this.myEvents = results[1] || [];
