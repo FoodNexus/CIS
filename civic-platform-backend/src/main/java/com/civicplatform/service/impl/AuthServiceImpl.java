@@ -6,7 +6,6 @@ import com.civicplatform.dto.request.UserRequest;
 import com.civicplatform.dto.response.AuthResponse;
 import com.civicplatform.entity.RefreshToken;
 import com.civicplatform.entity.User;
-import com.civicplatform.enums.Badge;
 import com.civicplatform.enums.Role;
 import com.civicplatform.mapper.UserMapper;
 import com.civicplatform.repository.RefreshTokenRepository;
@@ -14,6 +13,7 @@ import com.civicplatform.repository.UserRepository;
 import com.civicplatform.security.JwtService;
 import com.civicplatform.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,7 +22,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
