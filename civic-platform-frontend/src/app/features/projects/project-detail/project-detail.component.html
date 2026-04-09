@@ -79,9 +79,13 @@
             <p class="text-sm text-gray-600 mt-0.5">
               {{ project.voteCount || 0 }} vote<span *ngIf="(project.voteCount || 0) !== 1">s</span> au total
             </p>
-            <p *ngIf="hasVoted" class="text-xs font-medium text-emerald-800 mt-1">Vous avez déjà voté pour ce projet.</p>
+            <p *ngIf="isProjectCreator()" class="text-xs font-medium text-amber-800 mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              Vous avez créé ce projet — vous ne pouvez pas voter pour votre propre soumission.
+            </p>
+            <p *ngIf="hasVoted && !isProjectCreator()" class="text-xs font-medium text-emerald-800 mt-1">Vous avez déjà voté pour ce projet.</p>
           </div>
           <button
+            *ngIf="!isProjectCreator()"
             type="button"
             (click)="vote()"
             [disabled]="hasVoted || isVoting"

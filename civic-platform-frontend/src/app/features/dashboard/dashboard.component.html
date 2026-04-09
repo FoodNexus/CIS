@@ -10,6 +10,7 @@
             </div>
             <div>
               <h1 class="text-2xl font-bold text-gray-900">Welcome, {{ getUserName() }}!</h1>
+              <p class="text-sm text-emerald-700 font-medium mt-1">{{ getWelcomeSubtitle() }}</p>
               <p class="text-xs text-gray-400 mt-0.5">Your username is not your access level.</p>
               <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
                 <span class="text-sm text-gray-600">
@@ -23,16 +24,21 @@
               </div>
             </div>
           </div>
-          <button
-            (click)="refreshData()"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
-            [disabled]="isLoading"
-          >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0A8.001 8.001 0 0015.938 15M9 12l2 2 4-4" />
-            </svg>
-            Refresh
-          </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <a *ngIf="canCreateContent()" routerLink="/my-posts" class="inline-flex items-center px-4 py-2 border border-emerald-200 rounded-lg text-sm font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100">
+              My posts
+            </a>
+            <button
+              (click)="refreshData()"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+              [disabled]="isLoading"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0A8.001 8.001 0 0015.938 15M9 12l2 2 4-4" />
+              </svg>
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -85,13 +91,34 @@
     </div>
   </div>
 
-  <!-- DONOR TABS CONTENT -->
-  <div *ngIf="!isLoading && !error && canCreateContent()" class="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Dashboard tab panels (role-specific tabs from getTabs()) -->
+  <div *ngIf="!isLoading && !error" class="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- My Campaigns Tab -->
-    <div *ngIf="isActiveTab('campaigns')" class="space-y-6">
+    <!-- Campaigns tab: CITIZEN / PARTICIPANT — discovery -->
+    <div *ngIf="isActiveTab('campaigns') && (isCitizen() || isParticipant())" class="space-y-6">
+      <h2 class="text-2xl font-bold text-gray-900">Community campaigns</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div *ngFor="let campaign of feedCampaigns | slice:0:9" class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-gray-100 p-5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded">{{ campaign.type }}</span>
+            <span class="text-xs text-gray-400">{{ campaign.startDate | date:'mediumDate' }}</span>
+          </div>
+          <h4 class="font-semibold text-gray-900">{{ campaign.name }}</h4>
+          <p class="text-sm text-gray-600 mt-1 line-clamp-2">{{ campaign.description }}</p>
+          <a [routerLink]="['/campaigns', campaign.id]" class="mt-3 text-sm text-emerald-600 hover:text-emerald-800 font-medium">View details →</a>
+        </div>
+      </div>
+      <a routerLink="/campaigns" class="inline-flex text-sm font-semibold text-emerald-700 hover:text-emerald-900">Browse all campaigns →</a>
+    </div>
+
+    <!-- Campaigns tab: DONOR — organization + discovery -->
+    <div *ngIf="isActiveTab('campaigns') && isDonor()" class="space-y-8">
+      <div class="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+        <h3 class="text-sm font-bold text-emerald-900 uppercase tracking-wide">Your organization’s campaigns</h3>
+        <p class="text-sm text-emerald-800 mt-1">Campaigns created under your association account.</p>
+      </div>
       <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-bold text-gray-900">My Campaigns</h2>
+        <h2 class="text-2xl font-bold text-gray-900">My campaigns</h2>
         <a routerLink="/campaigns/new" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -122,10 +149,60 @@
           <p class="mt-1 text-sm text-gray-500">Get started by creating a new campaign.</p>
         </div>
       </div>
+      <div class="border-t border-gray-200 pt-8 space-y-4">
+        <h3 class="text-lg font-semibold text-gray-900">Impact overview</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-emerald-100 text-sm font-medium">Total event attendees (your events)</p>
+            <p class="text-3xl font-bold mt-2">{{ totalAttendees | number }}</p>
+          </div>
+          <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-green-100 text-sm font-medium">Total funds raised (your projects)</p>
+            <p class="text-3xl font-bold mt-2">${{ totalFundsRaised | number }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-4 pt-4">
+        <h3 class="text-lg font-semibold text-gray-900">Discover more campaigns</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div *ngFor="let campaign of feedCampaigns | slice:0:6" class="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+            <span class="text-xs font-medium text-emerald-600">{{ campaign.type }}</span>
+            <h4 class="font-semibold text-gray-900 mt-1">{{ campaign.name }}</h4>
+            <a [routerLink]="['/campaigns', campaign.id]" class="mt-2 inline-block text-sm text-emerald-600">View →</a>
+          </div>
+        </div>
+        <a routerLink="/campaigns" class="text-sm font-semibold text-emerald-700">Browse all campaigns →</a>
+      </div>
     </div>
 
-    <!-- My Events Tab -->
-    <div *ngIf="isActiveTab('events')" class="space-y-6">
+    <!-- Campaigns tab: AMBASSADOR -->
+    <div *ngIf="isActiveTab('campaigns') && isAmbassador()" class="space-y-8">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-gray-900">Your campaigns</h2>
+        <a routerLink="/campaigns/new" class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700">New Campaign</a>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div *ngFor="let campaign of myCampaigns" class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+          <h3 class="font-semibold text-gray-900">{{ campaign.name }}</h3>
+          <p class="text-sm text-gray-500 mt-1">{{ campaign.status }}</p>
+          <a [routerLink]="['/campaigns', campaign.id]" class="mt-3 text-sm text-emerald-600">Open →</a>
+        </div>
+        <div *ngIf="myCampaigns.length === 0" class="col-span-full text-center py-10 text-gray-500 text-sm">No campaigns yet.</div>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">Community campaigns</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div *ngFor="let campaign of feedCampaigns | slice:0:6" class="bg-white rounded-xl border p-4">
+            <h4 class="font-medium text-gray-900">{{ campaign.name }}</h4>
+            <a [routerLink]="['/campaigns', campaign.id]" class="text-sm text-emerald-600 mt-2 inline-block">View →</a>
+          </div>
+        </div>
+        <a routerLink="/campaigns" class="mt-3 inline-block text-sm font-semibold text-emerald-700">Browse all →</a>
+      </div>
+    </div>
+
+    <!-- Events tab: organizers (DONOR / AMBASSADOR) -->
+    <div *ngIf="isActiveTab('events') && canCreateContent()" class="space-y-6">
       <div class="flex items-center justify-between">
         <h2 class="text-2xl font-bold text-gray-900">My Events</h2>
         <a routerLink="/events/new" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700">
@@ -171,8 +248,8 @@
       </div>
     </div>
 
-    <!-- My Projects Tab -->
-    <div *ngIf="isActiveTab('projects')" class="space-y-6">
+    <!-- My Projects Tab (organizers) -->
+    <div *ngIf="isActiveTab('projects') && canCreateContent()" class="space-y-6">
       <div class="flex items-center justify-between">
         <h2 class="text-2xl font-bold text-gray-900">My Projects</h2>
         <a routerLink="/projects/new" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700">
@@ -213,424 +290,99 @@
       </div>
     </div>
 
-    <!-- My Posts Tab (Donor) -->
-    <div *ngIf="isActiveTab('posts')" class="space-y-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900">My Posts</h2>
-          <a routerLink="/posts" class="text-sm text-emerald-500 hover:text-emerald-700 font-medium mt-0.5 inline-block transition-colors">
-            Browse community posts →
-          </a>
+    <!-- Events tab: CITIZEN / PARTICIPANT -->
+    <div *ngIf="isActiveTab('events') && (isCitizen() || isParticipant())" class="space-y-10">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Upcoming events</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+          <div *ngFor="let event of feedEvents | slice:0:9" class="bg-white rounded-xl shadow-md border border-gray-100 p-5">
+            <span [class]="getEventStatusColor(event.status) + ' text-xs px-2 py-1 rounded'">{{ event.status }}</span>
+            <h4 class="font-semibold text-gray-900 mt-2">{{ event.title }}</h4>
+            <p class="text-sm text-gray-500 mt-1">{{ event.date | date:'mediumDate' }}</p>
+            <a [routerLink]="['/events', event.id]" class="mt-3 text-sm text-emerald-600 font-medium">View event →</a>
+          </div>
         </div>
-        <a routerLink="/posts/new" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 shadow-sm transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          New Post
-        </a>
+        <a routerLink="/events" class="inline-block mt-4 text-sm font-semibold text-emerald-700">Browse all events →</a>
       </div>
-      <div class="space-y-4">
-        <ng-container *ngTemplateOutlet="postCardList; context: { $implicit: myPosts }"></ng-container>
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">My participations</h2>
+        <p class="text-sm text-gray-500 mt-1">Events you registered for.</p>
+        <div class="space-y-4 mt-4">
+          <div *ngFor="let p of myParticipations" class="rounded-xl border border-emerald-100 bg-white p-4 flex justify-between items-center gap-4">
+            <div>
+              <p class="font-semibold text-gray-900">{{ p.eventTitle }}</p>
+              <p class="text-xs text-gray-500">{{ p.eventDate | date:'mediumDate' }} · {{ p.status }}</p>
+            </div>
+            <a [routerLink]="['/events', p.eventId]" class="text-sm text-emerald-600 shrink-0">Open</a>
+          </div>
+          <p *ngIf="myParticipations.length === 0" class="text-sm text-gray-500">No participations yet.</p>
+        </div>
       </div>
     </div>
 
-    <!-- Impact Stats Tab -->
-    <div *ngIf="isActiveTab('impact')" class="space-y-6">
-      <h2 class="text-2xl font-bold text-gray-900">My impact (your campaigns &amp; events)</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-8 text-white">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-blue-100 text-sm font-medium">Total Event Attendees</p>
-              <p class="text-4xl font-bold mt-2">{{ totalAttendees | number }}</p>
-            </div>
-            <div class="bg-white/20 rounded-full p-4">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-8 text-white">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-green-100 text-sm font-medium">Total Funds Raised</p>
-              <p class="text-4xl font-bold mt-2">${{ totalFundsRaised | number }}</p>
-            </div>
-            <div class="bg-white/20 rounded-full p-4">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599-1M12 8V7m0 1v8m0 0v8m0-6c2 0 1.998-1.586 4-5.143V8c0-3.557-2-6.143-4-6.143z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-          <div class="flex items-center">
-            <div class="bg-emerald-100 rounded-full p-3">
-              <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm text-gray-500">Active Campaigns</p>
-              <p class="text-2xl font-bold text-gray-900">{{ myCampaigns.length }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-          <div class="flex items-center">
-            <div class="bg-yellow-100 rounded-full p-3">
-              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm text-gray-500">Events Organized</p>
-              <p class="text-2xl font-bold text-gray-900">{{ myEvents.length }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-          <div class="flex items-center">
-            <div class="bg-green-100 rounded-full p-3">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm text-gray-500">Projects Created</p>
-              <p class="text-2xl font-bold text-gray-900">{{ myProjects.length }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CITIZEN/PARTICIPANT/AMBASSADOR TABS CONTENT -->
-  <div *ngIf="!isLoading && !error && !canCreateContent()" class="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-
-    <!-- Feed Tab -->
-    <div *ngIf="isActiveTab('feed')" class="space-y-6">
-      <h2 class="text-2xl font-bold text-gray-900">Feed</h2>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold text-emerald-900 flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-            </svg>
-            Latest Campaigns
-          </h3>
-          <div *ngFor="let campaign of feedCampaigns | slice:0:3" class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-gray-100 p-5">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded">{{ campaign.type }}</span>
-              <span class="text-xs text-gray-400">{{ campaign.startDate | date:'mediumDate' }}</span>
-            </div>
-            <h4 class="font-semibold text-gray-900">{{ campaign.name }}</h4>
-            <p class="text-sm text-gray-600 mt-1 line-clamp-2">{{ campaign.description }}</p>
-            <a [routerLink]="['/campaigns', campaign.id]" class="mt-3 text-sm text-emerald-600 hover:text-emerald-800 font-medium">View details →</a>
-          </div>
-        </div>
-
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold text-yellow-900 flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            Upcoming Events
-          </h3>
-          <div *ngFor="let event of feedEvents | slice:0:3" class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-gray-100 p-5">
-            <div class="flex items-center justify-between mb-2">
-              <span [class]="getEventStatusColor(event.status) + ' text-xs px-2 py-1 rounded'">{{ event.status }}</span>
-              <span class="text-xs text-gray-400">{{ event.currentParticipants || 0 }} attending</span>
-            </div>
-            <h4 class="font-semibold text-gray-900">{{ event.title }}</h4>
-            <p class="text-sm text-gray-600 mt-1">{{ event.date | date:'mediumDate' }} • {{ event.location }}</p>
-            <a [routerLink]="['/events', event.id]" class="mt-3 text-sm text-yellow-600 hover:text-yellow-800 font-medium">Join event →</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-8">
-        <h3 class="text-lg font-semibold text-green-900 flex items-center mb-4">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Projects to Fund
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div *ngFor="let project of feedProjects | slice:0:6" class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-gray-100 p-5">
+    <!-- Projects tab: CITIZEN / PARTICIPANT -->
+    <div *ngIf="isActiveTab('projects') && (isCitizen() || isParticipant())" class="space-y-10">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Projects to support</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+          <div *ngFor="let project of feedProjects | slice:0:9" class="bg-white rounded-xl border border-gray-100 p-5">
             <h4 class="font-semibold text-gray-900">{{ project.title }}</h4>
-            <div class="mt-3">
-              <div class="flex justify-between text-sm mb-1">
-                <span class="text-gray-600">${{ project.currentAmount | number }}</span>
-                <span class="text-gray-900">of ${{ project.goalAmount | number }}</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-green-500 h-2 rounded-full" [style.width.%]="getProjectProgress(project)"></div>
-              </div>
-              <p class="text-xs text-gray-500 mt-1">{{ getProjectProgress(project) }}% funded</p>
-            </div>
-            <a [routerLink]="['/projects', project.id]" class="mt-3 block text-sm text-green-600 hover:text-green-800 font-medium">Donate to this project →</a>
+            <p class="text-sm text-gray-500 mt-2">{{ getProjectProgress(project) }}% funded</p>
+            <a [routerLink]="['/projects', project.id]" class="mt-3 text-sm text-emerald-600">View project →</a>
           </div>
         </div>
+        <a routerLink="/projects" class="inline-block mt-4 text-sm font-semibold text-emerald-700">Browse all projects →</a>
       </div>
-    </div>
-
-    <!-- My Posts Tab (Citizen) -->
-    <div *ngIf="isActiveTab('posts')" class="space-y-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900">My Posts</h2>
-          <a routerLink="/posts" class="text-sm text-emerald-500 hover:text-emerald-700 font-medium mt-0.5 inline-block transition-colors">
-            Browse community posts →
-          </a>
-        </div>
-        <a routerLink="/posts/new" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 shadow-sm transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          New Post
-        </a>
-      </div>
-      <div class="space-y-4">
-        <ng-container *ngTemplateOutlet="postCardList; context: { $implicit: myPosts }"></ng-container>
-      </div>
-    </div>
-
-    <!-- My Participations Tab (aligned with donate / project detail styling) -->
-    <div *ngIf="isActiveTab('participations')" class="space-y-6">
-      <div class="flex items-end justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900">My Event Participations</h2>
-          <p class="text-sm text-gray-500 mt-1">Events you registered for — same data as the event page.</p>
-        </div>
-      </div>
-      <div class="space-y-4">
-        <div *ngFor="let p of myParticipations"
-             class="rounded-2xl overflow-hidden shadow-lg border border-emerald-100 bg-white">
-          <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 flex items-center justify-between">
-            <span class="text-white text-xs font-bold uppercase tracking-wider">Event</span>
-            <span [ngClass]="{
-              'bg-white/25 text-white': p.status === 'COMPLETED',
-              'bg-white/20 text-white': p.status === 'REGISTERED' || p.status === 'CHECKED_IN'
-            }" class="text-xs font-semibold px-2.5 py-0.5 rounded-full">
-              {{ p.status === 'COMPLETED' ? '✓ Attended' : (p.status === 'REGISTERED' ? 'Registered' : p.status?.replace('_', ' ')) }}
-            </span>
-          </div>
-          <div class="p-5 flex items-start gap-4">
-            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-md">
-              {{ p.eventTitle?.charAt(0)?.toUpperCase() }}
-            </div>
-            <div class="min-w-0 flex-1">
-              <h3 class="text-lg font-bold text-gray-900">{{ p.eventTitle }}</h3>
-              <p class="text-sm text-gray-500 mt-1">
-                {{ p.eventDate | date:'fullDate' }}
-                <span *ngIf="p.eventLocation"> · {{ p.eventLocation }}</span>
-              </p>
-              <p class="text-xs text-gray-400 mt-1">Registered {{ p.registeredAt | date:'medium' }}</p>
-              <button *ngIf="p.status === 'COMPLETED'" type="button"
-                      (click)="downloadParticipationCertificate(p)"
-                      [disabled]="certificateLoadingKey === certificateKey(p)"
-                      class="mt-3 inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-md disabled:opacity-50 transition-all">
-                {{ certificateLoadingKey === certificateKey(p) ? 'Preparing PDF…' : 'Download certificate (PDF)' }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div *ngIf="myParticipations.length === 0" class="rounded-2xl border-2 border-dashed border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-white text-center py-14 px-6">
-          <div class="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-4">
-            <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <h3 class="text-base font-bold text-gray-900">No participations yet</h3>
-          <p class="mt-1 text-sm text-gray-500">Register on an event page — it will show up here instantly after refresh.</p>
-          <a routerLink="/events" class="mt-5 inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg transition-all">
-            Browse events
-          </a>
-        </div>
-      </div>
-
-      <!-- Badge progress card -->
-      <div class="rounded-2xl overflow-hidden shadow-xl border border-emerald-200">
-        <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-4 text-white">
-          <p class="text-xs font-semibold uppercase tracking-wide text-emerald-100">Rewards</p>
-          <h3 class="text-lg font-bold">Badge progress</h3>
-          <p class="text-emerald-100 text-sm mt-1">Completed events count toward your badge (confirm attendance on the event when applicable).</p>
-        </div>
-        <div class="p-6 bg-white flex items-center gap-4">
-          <app-badge [badge]="getUserBadge()" [awardedDate]="getAwardedDate()" size="lg"></app-badge>
-          <div class="flex-1 min-w-0">
-            <div class="flex justify-between text-sm mb-1 text-gray-700">
-              <span>{{ getEventsAttendedDisplay() }} event{{ getEventsAttendedDisplay() === 1 ? '' : 's' }} attended</span>
-              <span class="font-medium text-emerald-700">{{ getNextBadgeThreshold() }} for {{ getBadgeLabel(getNextBadge()) }}</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-              <div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all" [style.width.%]="getBadgeProgressPercent()"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- My Funding Tab (Stripe-like donation history) -->
-    <div *ngIf="isActiveTab('funding')" class="space-y-6">
       <div>
         <h2 class="text-2xl font-bold text-gray-900">My donations</h2>
-        <p class="text-sm text-gray-500 mt-1">Secure payments from the project donate flow — same as your project donations.</p>
-      </div>
-      <div class="space-y-4">
-        <div *ngFor="let funding of myFundingHistory" class="rounded-2xl overflow-hidden shadow-lg border border-emerald-100 bg-white">
-          <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-3 flex items-center justify-between">
-            <span class="text-white text-xs font-bold uppercase tracking-wider">Donation</span>
-            <span class="text-white font-bold text-lg">${{ funding.amount | number:'1.2-2' }}</span>
+        <div class="space-y-3 mt-4">
+          <div *ngFor="let funding of myFundingHistory" class="rounded-lg border border-emerald-100 bg-emerald-50/50 px-4 py-3 flex justify-between">
+            <span class="font-medium text-gray-900">{{ funding.projectTitle }}</span>
+            <span class="text-emerald-800 font-semibold">${{ funding.amount | number:'1.2-2' }}</span>
           </div>
-          <div class="p-5 flex items-start justify-between gap-4">
-            <div class="flex items-start gap-3 min-w-0">
-              <div class="h-11 w-11 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599-1M12 8V7m0 1v8m0 0v8m0-6c2 0 1.998-1.586 4-5.143V8c0-3.557-2-6.143-4-6.143z" />
-                </svg>
-              </div>
-              <div class="min-w-0">
-                <h3 class="font-bold text-gray-900 truncate">{{ funding.projectTitle }}</h3>
-                <p class="text-sm text-gray-500">{{ funding.fundDate | date:'medium' }}</p>
-                <p *ngIf="funding.paymentMethod" class="text-xs text-gray-400 mt-1">Paid with {{ funding.paymentMethod }}</p>
-              </div>
-            </div>
-            <a [routerLink]="['/projects', funding.projectId]" class="flex-shrink-0 text-sm font-semibold text-emerald-600 hover:text-emerald-800">View project →</a>
-          </div>
-        </div>
-        <div *ngIf="myFundingHistory.length === 0" class="rounded-2xl border-2 border-dashed border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-white text-center py-14 px-6">
-          <div class="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-4">
-            <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg>
-          </div>
-          <h3 class="text-base font-bold text-gray-900">No donations yet</h3>
-          <p class="mt-1 text-sm text-gray-500">Use “Donate” on a project — your history will appear here.</p>
-          <a routerLink="/projects" class="mt-5 inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg transition-all">
-            Browse projects
-          </a>
+          <p *ngIf="myFundingHistory.length === 0" class="text-sm text-gray-500">No donations yet.</p>
         </div>
       </div>
     </div>
 
-    <!-- My Badge Tab -->
-    <div *ngIf="isActiveTab('badge')" class="space-y-6">
-      <h2 class="text-2xl font-bold text-gray-900">My Badge</h2>
-
-      <!-- How it works banner -->
-      <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
-        <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <div class="text-sm text-emerald-800">
-          <strong>How badges work:</strong> Badges are rewards for attending civic events. Each completed event counts towards your badge level. Attend more events to level up!
-        </div>
+    <!-- Volunteering tab (AMBASSADOR) -->
+    <div *ngIf="isActiveTab('volunteering')" class="space-y-6">
+      <h2 class="text-2xl font-bold text-gray-900">Volunteering &amp; engagement</h2>
+      <p class="text-sm text-gray-600">Track events you join and your badge progress.</p>
+      <div *ngFor="let p of myParticipations" class="rounded-xl border border-emerald-100 bg-white p-4">
+        <p class="font-semibold">{{ p.eventTitle }}</p>
+        <p class="text-xs text-gray-500">{{ p.status }} · {{ p.eventDate | date:'mediumDate' }}</p>
       </div>
-
-      <!-- Current Badge Card -->
-      <div class="bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 rounded-2xl shadow-xl p-8 text-white">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-yellow-100 text-sm font-medium uppercase tracking-wide">Current Badge</p>
-            <h3 class="text-4xl font-bold mt-2">{{ getBadgeLabel(getUserBadge()) }}</h3>
-            <p class="text-yellow-100 mt-2">
-              <strong>{{ getEventsAttendedDisplay() }}</strong> event{{ getEventsAttendedDisplay() === 1 ? '' : 's' }} attended
-            </p>
-            <p *ngIf="getAwardedDate()" class="text-yellow-200 text-sm mt-1">Awarded on {{ getAwardedDate() | date:'longDate' }}</p>
-          </div>
-          <div class="bg-white/20 rounded-full p-6">
-            <app-badge [badge]="getUserBadge()" size="xl"></app-badge>
-          </div>
+      <p *ngIf="myParticipations.length === 0" class="text-gray-500 text-sm">No participations yet — <a routerLink="/events" class="text-emerald-600 font-medium">browse events</a>.</p>
+      <div class="rounded-xl border border-emerald-200 p-4 bg-emerald-50/50">
+        <p class="text-sm font-semibold text-emerald-900">Badge progress</p>
+        <p class="text-2xl font-bold text-emerald-800 mt-1">{{ getEventsAttendedDisplay() }} events attended</p>
+        <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+          <div class="h-full bg-emerald-500 rounded-full" [style.width.%]="getBadgeProgressPercent()"></div>
         </div>
-      </div>
-
-      <!-- Badge Progression -->
-      <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Badge Roadmap</h3>
-        <p class="text-sm text-gray-500 mb-5">Each badge level requires more attended events. Your progress is shown below.</p>
-        <div class="space-y-5">
-
-          <div class="flex items-center gap-4">
-            <div class="w-24 flex items-center gap-2">
-              <app-badge badge="BRONZE" size="sm"></app-badge>
-              <span class="text-xs text-gray-500">1 event</span>
-            </div>
-            <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full bg-amber-500 rounded-full transition-all"
-                   [style.width.%]="getEventsAttendedDisplay() >= 1 ? 100 : getEventsAttendedDisplay() * 100"></div>
-            </div>
-            <span class="text-xs font-semibold w-12 text-right" [class.text-amber-600]="getEventsAttendedDisplay() >= 1" [class.text-gray-400]="getEventsAttendedDisplay() < 1">
-              {{ getEventsAttendedDisplay() >= 1 ? '✓' : getEventsAttendedDisplay() + '/1' }}
-            </span>
-          </div>
-
-          <div class="flex items-center gap-4">
-            <div class="w-24 flex items-center gap-2">
-              <app-badge badge="SILVER" size="sm"></app-badge>
-              <span class="text-xs text-gray-500">3 events</span>
-            </div>
-            <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full bg-gray-400 rounded-full transition-all"
-                   [style.width.%]="getEventsAttendedDisplay() >= 3 ? 100 : (getEventsAttendedDisplay() / 3) * 100"></div>
-            </div>
-            <span class="text-xs font-semibold w-12 text-right" [class.text-gray-600]="getEventsAttendedDisplay() >= 3" [class.text-gray-400]="getEventsAttendedDisplay() < 3">
-              {{ getEventsAttendedDisplay() >= 3 ? '✓' : getEventsAttendedDisplay() + '/3' }}
-            </span>
-          </div>
-
-          <div class="flex items-center gap-4">
-            <div class="w-24 flex items-center gap-2">
-              <app-badge badge="GOLD" size="sm"></app-badge>
-              <span class="text-xs text-gray-500">5 events</span>
-            </div>
-            <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full bg-yellow-400 rounded-full transition-all"
-                   [style.width.%]="getEventsAttendedDisplay() >= 5 ? 100 : (getEventsAttendedDisplay() / 5) * 100"></div>
-            </div>
-            <span class="text-xs font-semibold w-12 text-right" [class.text-yellow-600]="getEventsAttendedDisplay() >= 5" [class.text-gray-400]="getEventsAttendedDisplay() < 5">
-              {{ getEventsAttendedDisplay() >= 5 ? '✓' : getEventsAttendedDisplay() + '/5' }}
-            </span>
-          </div>
-
-          <div class="flex items-center gap-4">
-            <div class="w-24 flex items-center gap-2">
-              <app-badge badge="PLATINUM" size="sm"></app-badge>
-              <span class="text-xs text-gray-500">8 events</span>
-            </div>
-            <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full bg-emerald-400 rounded-full transition-all"
-                   [style.width.%]="getEventsAttendedDisplay() >= 8 ? 100 : (getEventsAttendedDisplay() / 8) * 100"></div>
-            </div>
-            <span class="text-xs font-semibold w-12 text-right" [class.text-emerald-600]="getEventsAttendedDisplay() >= 8" [class.text-gray-400]="getEventsAttendedDisplay() < 8">
-              {{ getEventsAttendedDisplay() >= 8 ? '✓' : getEventsAttendedDisplay() + '/8' }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- CTA -->
-      <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-5 text-white flex items-center justify-between">
-        <div>
-          <p class="font-semibold">Ready to earn your next badge?</p>
-          <p class="text-emerald-200 text-sm mt-0.5">Browse upcoming events and register today.</p>
-        </div>
-        <a routerLink="/events" class="flex-shrink-0 ml-4 px-4 py-2 bg-white text-emerald-700 text-sm font-bold rounded-lg hover:bg-emerald-50 transition-colors">
-          Browse Events
-        </a>
       </div>
     </div>
-  </div>
+
+    <!-- Profile tab -->
+    <div *ngIf="isActiveTab('profile')" class="space-y-6 max-w-xl">
+      <h2 class="text-2xl font-bold text-gray-900">Profile</h2>
+      <p class="text-sm text-gray-600">Edit your personal information, association details, and download your QR code.</p>
+      <a routerLink="/profile" class="inline-flex items-center px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-md">
+        Open full profile
+      </a>
+    </div>
+
+    <!-- Settings tab -->
+    <div *ngIf="isActiveTab('settings')" class="space-y-6 max-w-xl">
+      <h2 class="text-2xl font-bold text-gray-900">Settings</h2>
+      <p class="text-sm text-gray-600">Notifications, privacy, and account preferences will be available here.</p>
+      <div class="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-sm text-gray-500">
+        Placeholder — configure email notifications and privacy in a future update.
+      </div>
+    </div>
+
+</div>
+
 </div>
 
 <!-- ===== Shared Post Card Template ===== -->

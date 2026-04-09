@@ -230,10 +230,19 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     return Math.min(100, Math.round((this.project.currentAmount / this.project.goalAmount) * 100));
   }
 
+  isProjectCreator(): boolean {
+    const uid = this.authService.getCurrentUser()?.id;
+    return (
+      uid != null &&
+      this.project?.createdById != null &&
+      this.project.createdById === uid
+    );
+  }
+
   getStatusColor(status: string): string {
     switch (status) {
       case 'ACTIVE': return 'bg-green-100 text-green-800';
-      case 'COMPLETED': return 'bg-blue-100 text-blue-800';
+      case 'COMPLETED': return 'bg-slate-100 text-slate-800';
       case 'PENDING': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-700';
     }

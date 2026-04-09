@@ -34,27 +34,35 @@ import { BadgeComponent } from '@shared/components/badge/badge.component';
 
           <div class="p-6 border-b border-emerald-100">
             <div class="rounded-2xl overflow-hidden shadow-lg border border-emerald-100 bg-white">
-              <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 flex items-center justify-between">
+              <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-3 flex items-center justify-between">
                 <span class="text-white text-xs font-bold uppercase tracking-wider">My QR code</span>
               </div>
-              <div class="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <p class="text-sm text-gray-600">PNG for check-in — encodes your public identity JSON (same spirit as My donations cards).</p>
-                <button type="button" (click)="downloadMyQr()" [disabled]="qrDownloading"
-                        class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-md disabled:opacity-50 text-sm whitespace-nowrap">
-                  {{ qrDownloading ? 'Preparing…' : 'Download QR (PNG)' }}
-                </button>
+              <div class="p-5 space-y-5">
+                <p class="text-sm text-gray-600">
+                  The PNG encodes <strong>plain labeled lines</strong> (username, role, badge, email) — <strong>not</strong> JSON and <strong>not</strong> your internal user id. Staff resolve your account via email in the admin scanner.
+                </p>
+                <div class="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+                  <p class="text-xs font-bold uppercase tracking-wide text-emerald-800 mb-3">What’s in the QR (same as download)</p>
+                  <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                    <div class="flex flex-col sm:flex-row sm:gap-2"><dt class="text-gray-500 shrink-0">Format</dt><dd class="font-mono text-gray-900">CivicIdentity/v2</dd></div>
+                    <div class="flex flex-col sm:flex-row sm:gap-2"><dt class="text-gray-500 shrink-0">Username</dt><dd class="text-gray-900 break-all">{{ '@' + user.userName }}</dd></div>
+                    <div class="flex flex-col sm:flex-row sm:gap-2"><dt class="text-gray-500 shrink-0">Role</dt><dd class="text-gray-900">{{ user.userType || '—' }}</dd></div>
+                    <div class="flex flex-col sm:flex-row sm:gap-2"><dt class="text-gray-500 shrink-0">Badge</dt><dd class="text-gray-900">{{ user.badge || 'NONE' }}</dd></div>
+                    <div class="flex flex-col sm:flex-row sm:gap-2 sm:col-span-2"><dt class="text-gray-500 shrink-0">Email</dt><dd class="text-gray-900 break-all">{{ user.email }}</dd></div>
+                  </dl>
+                  <p class="text-xs text-gray-500 mt-3">Your account id ({{ user.id }}) stays in the app only — it is not placed inside the QR.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+                  <button type="button" (click)="downloadMyQr()" [disabled]="qrDownloading"
+                          class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-md disabled:opacity-50 text-sm whitespace-nowrap">
+                    {{ qrDownloading ? 'Preparing…' : 'Download QR (PNG)' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           <form [formGroup]="profileForm" (ngSubmit)="save()" class="p-6 space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="bg-blue-50 rounded-xl p-4 md:col-span-2">
-                <label class="text-xs text-blue-700 font-semibold">User type (read-only)</label>
-                <p class="text-lg font-semibold text-blue-900">{{ user.userType }}</p>
-              </div>
-            </div>
-
             <div class="bg-emerald-50 rounded-xl p-4">
               <h2 class="text-lg font-semibold text-emerald-900 mb-3">Personal Info</h2>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

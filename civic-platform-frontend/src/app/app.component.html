@@ -75,6 +75,11 @@
            [class.lg:justify-center]="sidebarCollapsed">
           <span class="truncate" [class.lg:hidden]="sidebarCollapsed">Users</span>
         </a>
+        <a routerLink="/admin/scan" routerLinkActive="bg-slate-700 text-white font-semibold" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-slate-200 hover:bg-slate-700/80"
+           [class.lg:justify-center]="sidebarCollapsed">
+          <span class="truncate" [class.lg:hidden]="sidebarCollapsed">Scan QR</span>
+        </a>
         <a routerLink="/admin/events" routerLinkActive="bg-slate-700 text-white font-semibold" (click)="closeMobileMenu()"
            class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-slate-200 hover:bg-slate-700/80"
            [class.lg:justify-center]="sidebarCollapsed">
@@ -111,14 +116,14 @@
 
 <!-- Regular user shell -->
 <div *ngIf="!isAuthPage() && isLoggedIn() && !isAdmin()" class="min-h-screen bg-gray-50 flex flex-col">
-  <nav class="bg-[#2563EB] shadow-md z-[60] relative border-b border-blue-700">
+  <nav class="bg-gradient-to-r from-green-600 to-emerald-600 shadow-md z-[60] relative border-b border-emerald-800/40">
     <div class="w-full px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
         <div class="flex items-center min-w-0">
           <button
             type="button"
             (click)="toggleMobileMenu()"
-            class="md:hidden -ml-0.5 p-2 rounded-lg text-blue-100 hover:bg-blue-600/80 mr-1 shrink-0"
+            class="md:hidden -ml-0.5 p-2 rounded-lg text-emerald-100 hover:bg-emerald-700/80 mr-1 shrink-0"
             [attr.aria-expanded]="mobileMenuOpen"
             aria-label="Menu">
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -146,10 +151,10 @@
             </button>
             <div *ngIf="isUserMenuOpen" class="absolute right-0 z-[70] mt-2 w-48 rounded-xl shadow-lg bg-white ring-1 ring-gray-200">
               <div class="py-1">
-                <a routerLink="/dashboard" (click)="closeUserMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">Dashboard</a>
-                <a routerLink="/profile" (click)="closeUserMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">Profile</a>
+                <a routerLink="/dashboard" (click)="closeUserMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50">Dashboard</a>
+                <a routerLink="/profile" (click)="closeUserMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50">Profile</a>
                 <div class="border-t border-gray-100"></div>
-                <button (click)="logout()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">Sign out</button>
+                <button (click)="logout()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50">Sign out</button>
               </div>
             </div>
           </div>
@@ -166,7 +171,7 @@
   <div class="flex flex-1 min-h-0">
     <aside
       *ngIf="isLoggedIn() && !isAuthPage()"
-      class="flex flex-col shrink-0 border-r border-blue-100 bg-white overflow-hidden
+      class="flex flex-col shrink-0 border-r border-emerald-100 bg-white overflow-hidden
              transition-[transform,width] duration-300 ease-out
              fixed z-50 top-16 left-0 bottom-0 w-[min(18rem,88vw)]
              md:relative md:top-auto md:z-auto md:bottom-auto
@@ -175,22 +180,22 @@
       [class.translate-x-0]="mobileMenuOpen"
       [ngClass]="sidebarCollapsed ? 'md:w-16' : 'md:w-60'">
 
-      <div class="flex items-center gap-1 h-14 px-2 border-b border-blue-100 bg-blue-50/80 shrink-0">
-        <div class="w-9 h-9 rounded-xl bg-[#2563EB] flex items-center justify-center text-white font-bold text-xs shrink-0 ring-2 ring-blue-100">
+      <div class="flex items-center gap-1 h-14 px-2 border-b border-emerald-100 bg-emerald-50/80 shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-xs shrink-0 ring-2 ring-emerald-100">
           CP
         </div>
         <div class="min-w-0 md:hidden">
           <div class="text-sm font-bold text-gray-900 leading-tight truncate">Civic Platform</div>
-          <div class="text-[10px] font-semibold text-blue-700 uppercase tracking-wider">Navigation</div>
+          <div class="text-[10px] font-semibold text-emerald-800 uppercase tracking-wider">Navigation</div>
         </div>
         <div class="min-w-0 hidden md:block overflow-hidden" *ngIf="!sidebarCollapsed">
           <div class="text-sm font-bold text-gray-900 leading-tight truncate">Civic Platform</div>
-          <div class="text-[10px] font-semibold text-blue-700 uppercase tracking-wider">Navigation</div>
+          <div class="text-[10px] font-semibold text-emerald-800 uppercase tracking-wider">Navigation</div>
         </div>
         <button
           type="button"
           (click)="toggleSidebarCollapsed()"
-          class="hidden md:flex ml-auto p-1.5 rounded-lg text-blue-700 hover:bg-blue-100/80 transition-colors shrink-0"
+          class="hidden md:flex ml-auto p-1.5 rounded-lg text-emerald-700 hover:bg-emerald-100/80 transition-colors shrink-0"
           [attr.aria-label]="sidebarCollapsed ? 'Expand menu' : 'Collapse menu'">
           <svg class="w-5 h-5 transition-transform duration-300" [class.rotate-180]="sidebarCollapsed" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -201,40 +206,40 @@
       <nav class="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
         <p class="px-2 pt-1 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden md:block" [class.md:hidden]="sidebarCollapsed">Menu</p>
 
-        <a routerLink="/dashboard" routerLinkActive="bg-blue-50 text-blue-900 border-[#2563EB] shadow-sm font-semibold"
+        <a routerLink="/dashboard" routerLinkActive="bg-emerald-50 text-emerald-900 border-emerald-600 shadow-sm font-semibold"
            [routerLinkActiveOptions]="{exact: true}"
            (click)="closeMobileMenu()"
-           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-blue-50 hover:text-blue-900 transition-colors"
+           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
            [class.md:justify-center]="sidebarCollapsed" [class.md:gap-0]="sidebarCollapsed">
           <span class="truncate max-md:inline" [class.md:hidden]="sidebarCollapsed">Dashboard</span>
         </a>
-        <a routerLink="/posts" routerLinkActive="bg-blue-50 text-blue-900 border-[#2563EB] shadow-sm font-semibold" (click)="closeMobileMenu()"
-           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-blue-50 hover:text-blue-900 transition-colors"
+        <a routerLink="/posts" routerLinkActive="bg-emerald-50 text-emerald-900 border-emerald-600 shadow-sm font-semibold" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
            [class.md:justify-center]="sidebarCollapsed" [class.md:gap-0]="sidebarCollapsed">
           <span class="truncate max-md:inline" [class.md:hidden]="sidebarCollapsed">Feed</span>
         </a>
-        <a routerLink="/campaigns" routerLinkActive="bg-blue-50 text-blue-900 border-[#2563EB] shadow-sm font-semibold" (click)="closeMobileMenu()"
-           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-blue-50 hover:text-blue-900 transition-colors"
+        <a routerLink="/campaigns" routerLinkActive="bg-emerald-50 text-emerald-900 border-emerald-600 shadow-sm font-semibold" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
            [class.md:justify-center]="sidebarCollapsed" [class.md:gap-0]="sidebarCollapsed">
           <span class="truncate max-md:inline" [class.md:hidden]="sidebarCollapsed">Campaigns</span>
         </a>
-        <a routerLink="/events" routerLinkActive="bg-blue-50 text-blue-900 border-[#2563EB] shadow-sm font-semibold" (click)="closeMobileMenu()"
-           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-blue-50 hover:text-blue-900 transition-colors"
+        <a routerLink="/events" routerLinkActive="bg-emerald-50 text-emerald-900 border-emerald-600 shadow-sm font-semibold" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
            [class.md:justify-center]="sidebarCollapsed" [class.md:gap-0]="sidebarCollapsed">
           <span class="truncate max-md:inline" [class.md:hidden]="sidebarCollapsed">Events</span>
         </a>
-        <a routerLink="/projects" routerLinkActive="bg-blue-50 text-blue-900 border-[#2563EB] shadow-sm font-semibold" (click)="closeMobileMenu()"
-           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-blue-50 hover:text-blue-900 transition-colors"
+        <a routerLink="/projects" routerLinkActive="bg-emerald-50 text-emerald-900 border-emerald-600 shadow-sm font-semibold" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
            [class.md:justify-center]="sidebarCollapsed" [class.md:gap-0]="sidebarCollapsed">
           <span class="truncate max-md:inline" [class.md:hidden]="sidebarCollapsed">Projects</span>
         </a>
-        <a routerLink="/my-posts" routerLinkActive="bg-blue-50 text-blue-900 border-[#2563EB] shadow-sm font-semibold" (click)="closeMobileMenu()"
-           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-blue-50 hover:text-blue-900 transition-colors"
+        <a routerLink="/my-posts" routerLinkActive="bg-emerald-50 text-emerald-900 border-emerald-600 shadow-sm font-semibold" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
            [class.md:justify-center]="sidebarCollapsed" [class.md:gap-0]="sidebarCollapsed">
           <span class="truncate max-md:inline" [class.md:hidden]="sidebarCollapsed">My Posts</span>
         </a>
-        <a routerLink="/profile" routerLinkActive="bg-blue-50 text-blue-900 border-[#2563EB] shadow-sm font-semibold" (click)="closeMobileMenu()"
-           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-blue-50 hover:text-blue-900 transition-colors"
+        <a routerLink="/profile" routerLinkActive="bg-emerald-50 text-emerald-900 border-emerald-600 shadow-sm font-semibold" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
            [class.md:justify-center]="sidebarCollapsed" [class.md:gap-0]="sidebarCollapsed">
           <span class="truncate max-md:inline" [class.md:hidden]="sidebarCollapsed">Profile</span>
         </a>

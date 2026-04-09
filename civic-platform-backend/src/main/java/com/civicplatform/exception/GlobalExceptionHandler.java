@@ -163,7 +163,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex, WebRequest request) {
         String msg = ex.getMessage();
-        if (msg != null && (msg.contains("already voted") || msg.contains("Can only vote for DRAFT"))) {
+        if (msg != null && (msg.contains("already voted") || msg.contains("Can only vote for DRAFT")
+                || msg.contains("cannot vote on their own") || msg.contains("cannot register as participants"))) {
             ErrorResponse errorResponse = ErrorResponse.builder()
                     .timestamp(LocalDateTime.now())
                     .status(HttpStatus.BAD_REQUEST.value())

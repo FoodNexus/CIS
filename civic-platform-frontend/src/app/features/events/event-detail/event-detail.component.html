@@ -44,7 +44,7 @@
         <span [class]="{
           'bg-white/10 text-slate-100': event.status === 'UPCOMING',
           'bg-emerald-500/30 text-emerald-100': event.status === 'ONGOING',
-          'bg-blue-500/20 text-blue-100': event.status === 'COMPLETED',
+          'bg-slate-500/30 text-slate-100': event.status === 'COMPLETED',
           'bg-red-500/25 text-red-100': event.status === 'CANCELLED'
         }" class="inline-block mt-4 text-xs font-bold px-3 py-1 rounded-full border border-white/20">
           {{ event.status }}
@@ -71,7 +71,7 @@
         <span [class]="{
           'bg-yellow-400/20 text-yellow-100': event.status === 'UPCOMING',
           'bg-green-400/20 text-green-100': event.status === 'ONGOING',
-          'bg-blue-400/20 text-blue-100': event.status === 'COMPLETED',
+          'bg-white/20 text-emerald-50': event.status === 'COMPLETED',
           'bg-red-400/20 text-red-100': event.status === 'CANCELLED'
         }" class="inline-block mt-4 text-xs font-bold px-3 py-1 rounded-full border border-white/20">
           {{ event.status }}
@@ -117,7 +117,7 @@
                     [disabled]="statusLoading"
                     [ngClass]="isAdminRoute()
                       ? 'px-4 py-2 rounded-xl text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50'
-                      : 'px-4 py-2 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-emerald-600 disabled:opacity-50'">
+                      : 'px-4 py-2 rounded-lg text-sm font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 disabled:opacity-50'">
               Mark COMPLETED
             </button>
             <button *ngIf="event.status === EventStatus.UPCOMING || event.status === EventStatus.ONGOING" type="button"
@@ -134,8 +134,8 @@
             <span>Participants</span>
             <span class="font-semibold text-slate-900">{{ event.currentParticipants ?? 0 }} / {{ event.maxCapacity ?? '—' }}</span>
           </div>
-          <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-            <div class="h-full bg-slate-600 rounded-full transition-all"
+          <div class="w-full bg-emerald-100 rounded-full h-2.5 overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full transition-all"
                  [style.width.%]="event.maxCapacity ? ((event.currentParticipants || 0) / event.maxCapacity) * 100 : 0"></div>
           </div>
         </div>
@@ -152,14 +152,17 @@
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Your registration</p>
-              <p *ngIf="isRegistered" class="text-lg font-bold text-gray-900 mt-1">
+              <p *ngIf="isOrganizer()" class="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+                You are the organizer of this event — you cannot register as a participant for your own event.
+              </p>
+              <p *ngIf="isRegistered && !isOrganizer()" class="text-lg font-bold text-gray-900 mt-1">
                 {{ getStatusLabel() }}
               </p>
-              <p *ngIf="!isRegistered" class="text-gray-500 text-sm mt-1">Join this event to appear under My Participations.</p>
+              <p *ngIf="!isRegistered && !isOrganizer()" class="text-gray-500 text-sm mt-1">Join this event to appear under My Participations.</p>
             </div>
 
             <div class="flex flex-wrap gap-2">
-              <ng-container *ngIf="!isRegistered && event.status === 'UPCOMING'">
+              <ng-container *ngIf="!isOrganizer() && !isRegistered && event.status === 'UPCOMING'">
                 <button type="button"
                         (click)="register()"
                         [disabled]="registrationLoading"

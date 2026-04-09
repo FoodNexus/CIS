@@ -15,6 +15,7 @@ export interface Project {
   finalReport?: string;
   organizerType?: string;
   createdAt?: string;
+  createdById?: number;
   fundingPercentage?: number;
   fullyFunded?: boolean;
 }

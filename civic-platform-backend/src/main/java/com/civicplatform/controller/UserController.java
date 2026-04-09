@@ -53,7 +53,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserByEmail(user.getEmail()));
     }
 
-    @Operation(summary = "Download PNG QR code with user identity JSON")
+    @Operation(summary = "Download PNG QR code with user identity (plain-text CivicIdentity payload)")
     @GetMapping("/{id}/qrcode")
     public ResponseEntity<byte[]> getUserQrCode(@PathVariable Long id, Authentication authentication) {
         User authUser = userRepository.findByEmail(authentication.getName())
@@ -70,7 +70,7 @@ public class UserController {
     }
 
     @Operation(summary = "Get user by email")
-    @GetMapping("/email/{email}")
+    @GetMapping("/email/{email:.+}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> getUserByEmail(@PathVariable String email) {
         UserResponse response = userService.getUserByEmail(email);

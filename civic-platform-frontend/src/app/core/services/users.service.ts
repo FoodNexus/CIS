@@ -32,4 +32,9 @@ export class UsersService {
   downloadQrCodePng(userId: number): Observable<Blob> {
     return this.http.get(`${this.API_URL}/${userId}/qrcode`, { responseType: 'blob' });
   }
+
+  /** Admin: resolve account by email (for QR payloads that omit user id). */
+  getUserByEmailForAdmin(email: string): Observable<User> {
+    return this.http.get<User>(`${this.API_URL}/email/${encodeURIComponent(email)}`);
+  }
 }

@@ -1,39 +1,143 @@
-<div [ngClass]="isAdminRoute() ? 'min-h-screen bg-slate-100 px-4 py-8' : 'container mx-auto px-4 py-8'">
-  <div [ngClass]="isAdminRoute() ? 'max-w-7xl mx-auto rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden' : ''">
-    <div *ngIf="isAdminRoute()" class="bg-slate-800 px-6 py-4 text-white">
-      <p class="text-xs font-bold uppercase tracking-wider text-slate-300">Events</p>
-      <h1 class="text-xl font-bold">Platform events</h1>
-      <p class="text-slate-300 text-sm mt-1">Browse upcoming and past events — open a card for details.</p>
-    </div>
-    <div [ngClass]="isAdminRoute() ? 'p-6' : ''">
-      <div *ngIf="!isAdminRoute()" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Events</h1>
-        <a
-          *ngIf="showNewEventButton()"
-          [routerLink]="newEventPath()"
-          class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700">
-          + New Event
-        </a>
+<div class="min-h-screen bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/80 py-8">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-emerald-100">
+      <!-- Header — matches profile hero -->
+      <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex items-center gap-4 min-w-0">
+            <div
+              class="h-14 w-14 shrink-0 rounded-full bg-white/20 flex items-center justify-center"
+              aria-hidden="true"
+            >
+              <svg
+                class="w-8 h-8 text-white/95"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs font-semibold uppercase tracking-wide text-emerald-100">
+                {{ isAdminRoute() ? 'Platform' : 'Community' }}
+              </p>
+              <h1 class="text-2xl font-bold truncate">
+                {{ isAdminRoute() ? 'Platform events' : 'Events' }}
+              </h1>
+              <p class="text-emerald-100 text-sm mt-0.5">
+                {{
+                  isAdminRoute()
+                    ? 'Review and manage civic events on the platform.'
+                    : 'Discover what is happening and join events that matter.'
+                }}
+              </p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 sm:justify-end">
+            <span
+              *ngIf="!isLoading && events.length"
+              class="inline-flex items-center px-3 py-1.5 rounded-full bg-white/20 text-sm font-medium"
+            >
+              {{ events.length }} {{ events.length === 1 ? 'event' : 'events' }}
+            </span>
+            <a
+              *ngIf="showNewEventButton()"
+              [routerLink]="newEventPath()"
+              class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap bg-white text-emerald-700 hover:bg-emerald-50 shadow-md"
+            >
+              + New Event
+            </a>
+          </div>
+        </div>
       </div>
-      <div *ngIf="isAdminRoute()" class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4 mb-6">
-        <a
-          *ngIf="showNewEventButton()"
-          [routerLink]="newEventPath()"
-          class="inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm text-white bg-slate-800 hover:bg-slate-900">
-          + New Event
-        </a>
-      </div>
-      <div *ngIf="isLoading" class="text-center py-12 text-slate-500">
-        <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2" [ngClass]="isAdminRoute() ? 'border-slate-600' : 'border-emerald-600'"></div>
-        <p class="mt-2">Loading...</p>
-      </div>
-      <div *ngIf="errorMessage" class="text-red-600 text-sm mb-4">{{ errorMessage }}</div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div *ngFor="let event of events" [ngClass]="isAdminRoute() ? 'rounded-xl border border-slate-200 bg-white shadow-sm p-5' : 'bg-white shadow rounded-lg p-4'">
-          <h3 class="font-bold text-slate-900">{{ event.title }}</h3>
-          <p class="text-sm text-slate-600 mt-1">{{ event.date | date }}</p>
-          <span class="inline-block mt-2 px-2 py-1 rounded text-xs" [ngClass]="getStatusColor(event.status)">{{ event.status }}</span>
-          <a [routerLink]="eventDetailLink(event.id)" [ngClass]="isAdminRoute() ? 'block mt-3 text-sm font-semibold text-slate-800 hover:text-slate-950' : 'block mt-2 text-emerald-600'">View Details →</a>
+
+      <div class="p-6">
+        <div *ngIf="isLoading" class="text-center py-16 text-slate-500">
+          <div
+            class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600"
+          ></div>
+          <p class="mt-3 text-sm">Loading events…</p>
+        </div>
+
+        <p *ngIf="errorMessage" class="text-sm font-medium text-red-600 mb-4">{{ errorMessage }}</p>
+
+        <div *ngIf="!isLoading && !errorMessage" class="bg-emerald-50 rounded-xl p-4 md:p-6">
+          <h2 class="text-lg font-semibold text-emerald-900 mb-4">All events</h2>
+
+          <div *ngIf="!events.length" class="text-center py-12 text-slate-600 text-sm">
+            No events yet. Check back soon or create one if you have permission.
+          </div>
+
+          <div
+            *ngIf="events.length"
+            class="grid grid-cols-1 sm:grid-cols-2 gap-4"
+          >
+            <article
+              *ngFor="let event of events"
+              class="bg-white rounded-xl border border-emerald-100/80 p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col"
+            >
+              <h3 class="font-bold text-slate-900 text-lg leading-snug">{{ event.title }}</h3>
+              <p class="text-sm text-slate-500 mt-1">
+                {{ event.date | date : 'mediumDate' }}
+              </p>
+              <p *ngIf="event.location" class="text-sm text-slate-600 mt-2 flex items-start gap-1.5">
+                <svg
+                  class="w-4 h-4 mt-0.5 shrink-0 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                <span>{{ event.location }}</span>
+              </p>
+              <div class="flex flex-wrap gap-2 mt-3">
+                <span
+                  class="inline-block px-2 py-1 rounded-md text-xs font-semibold uppercase tracking-wide bg-white border border-emerald-200 text-emerald-800"
+                >
+                  {{ eventTypeLabel(event.type) }}
+                </span>
+                <span
+                  class="inline-block px-2 py-1 rounded-md text-xs font-semibold uppercase tracking-wide"
+                  [ngClass]="getStatusColor(event.status)"
+                >
+                  {{ event.status }}
+                </span>
+              </div>
+              <div class="pt-4 border-t border-emerald-100/80 mt-auto">
+                <a
+                  [routerLink]="eventDetailLink(event.id)"
+                  class="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-semibold text-sm"
+                >
+                  View details
+                  <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-6 mt-2 border-t border-emerald-100">
+          <a [routerLink]="dashboardLink()" class="text-emerald-700 hover:text-emerald-900 font-medium">
+            ← Back to Dashboard
+          </a>
         </div>
       </div>
     </div>

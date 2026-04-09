@@ -10,7 +10,7 @@ import { CampaignsService, Campaign } from '@core/services/campaigns.service';
 import { EventsService, Event, EventParticipation } from '@core/services/events.service';
 import { ProjectsService, Project, ProjectFundingHistory } from '@core/services/projects.service';
 import { PostsService, Post } from '@core/services/posts.service';
-import { User } from '@core/models/auth.models';
+import { User, UserType } from '@core/models/auth.models';
 
 interface DashboardTab {
   id: string;
@@ -38,22 +38,15 @@ export class DashboardComponent implements OnInit {
   // User data
   currentUser: User | null = null;
 
-  // Tabs
-  donorTabs: DashboardTab[] = [
-    { id: 'campaigns', label: 'My Campaigns', icon: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z' },
-    { id: 'events', label: 'My Events', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-    { id: 'projects', label: 'My Projects', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-    { id: 'posts', label: 'My Posts', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
-    { id: 'impact', label: 'My impact', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' }
-  ];
-
-  citizenTabs: DashboardTab[] = [
-    { id: 'feed', label: 'Feed', icon: 'M6 5c7.182 0 7.182 0 12 0m-6 5c6.667 0 6.667 0 10 0m-6 5c4.571 0 4.571 0 8 0m-10 5l-2 2m0 0l-2-2m2 2v-6' },
-    { id: 'posts', label: 'My Posts', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
-    { id: 'participations', label: 'My Participations', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
-    { id: 'funding', label: 'My Funding', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599-1M12 8V7m0 1v8m0 0v8m0-6c2 0 1.998-1.586 4-5.143V8c0-3.557-2-6.143-4-6.143z' },
-    { id: 'badge', label: 'My Badge', icon: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z' }
-  ];
+  private readonly tabIcons = {
+    campaigns: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z',
+    events: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+    projects: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    volunteering: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+    profile: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+    settings: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z',
+    posts: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+  };
 
   // Active tab
   activeTab = 'campaigns';
@@ -106,10 +99,25 @@ export class DashboardComponent implements OnInit {
   }
 
   setDefaultTab(): void {
-    if (this.canCreateContent()) {
-      this.activeTab = 'campaigns';
-    } else {
-      this.activeTab = 'feed';
+    const t = this.currentUser?.userType;
+    if (t === UserType.AMBASSADOR) {
+      this.activeTab = 'events';
+      return;
+    }
+    this.activeTab = 'campaigns';
+  }
+
+  getWelcomeSubtitle(): string {
+    switch (this.currentUser?.userType) {
+      case UserType.DONOR:
+        return 'Support and launch community initiatives';
+      case UserType.AMBASSADOR:
+        return 'Mobilize and engage your community';
+      case UserType.CITIZEN:
+      case UserType.PARTICIPANT:
+        return 'Participate in your community\'s future';
+      default:
+        return 'Welcome to Civic Platform';
     }
   }
 
@@ -128,11 +136,30 @@ export class DashboardComponent implements OnInit {
 
     forkJoin(requests).subscribe({
       next: (results: any[]) => {
+        const allCampaigns: Campaign[] = results[0] || [];
+        const allEvents: Event[] = results[1] || [];
+        const allProjects: Project[] = results[2] || [];
         const allPosts: Post[] = results[3] || [];
+        const uid = this.currentUser?.id;
+
+        this.feedCampaigns = allCampaigns;
+        this.feedEvents = allEvents;
+        this.feedProjects = allProjects;
+
+        if (uid) {
+          this.myCampaigns = allCampaigns.filter(c => c.createdById === uid);
+          this.myEvents = allEvents.filter(e => e.organizerId === uid);
+          this.myProjects = allProjects.filter(p => p.createdById === uid);
+        } else {
+          this.myCampaigns = [];
+          this.myEvents = [];
+          this.myProjects = [];
+        }
+
         const currentUserName = this.currentUser?.userName;
         this.myPosts = currentUserName
           ? allPosts.filter(p => p.creator === currentUserName)
-          : allPosts;
+          : [];
 
         this.myPosts.forEach(post => {
           this.postsService.checkLike(post.id).subscribe({
@@ -141,40 +168,27 @@ export class DashboardComponent implements OnInit {
           });
         });
 
-        if (this.canCreateContent()) {
-          this.myCampaigns = results[0] || [];
-          this.myEvents = results[1] || [];
-          this.myProjects = results[2] || [];
-          this.myParticipations = [];
-          this.myFundingHistory = [];
-          this.eventsAttended = 0;
-          this.calculateImpactStats();
-        } else {
-          this.feedCampaigns = results[0] || [];
-          this.feedEvents = results[1] || [];
-          this.feedProjects = results[2] || [];
-          this.myParticipations = results[4] || [];
-          const fundings: ProjectFundingHistory[] = results[5] || [];
-          this.myFundingHistory = fundings.map(f => ({
-            projectId: f.projectId,
-            projectTitle: f.projectTitle,
-            amount: Number(f.amount),
-            fundDate: f.fundDate,
-            paymentMethod: f.paymentMethod
-          }));
-          const completed = this.myParticipations.filter(p => p.status === 'COMPLETED').length;
-          this.eventsAttended = completed;
-        }
+        this.myParticipations = results[4] || [];
+        const fundings: ProjectFundingHistory[] = results[5] || [];
+        this.myFundingHistory = fundings.map(f => ({
+          projectId: f.projectId,
+          projectTitle: f.projectTitle,
+          amount: Number(f.amount),
+          fundDate: f.fundDate,
+          paymentMethod: f.paymentMethod
+        }));
+        const completed = this.myParticipations.filter(p => p.status === 'COMPLETED').length;
+        this.eventsAttended = completed;
+
+        this.calculateImpactStats();
 
         this.authService.refreshProfile().pipe(
           finalize(() => this.isLoading = false)
         ).subscribe({
           next: () => {
             this.currentUser = this.authService.getCurrentUser();
-            if (!this.canCreateContent()) {
-              const pts = this.currentUser?.points ?? 0;
-              this.eventsAttended = Math.max(this.eventsAttended, pts);
-            }
+            const pts = this.currentUser?.points ?? 0;
+            this.eventsAttended = Math.max(this.eventsAttended, pts);
           },
           error: () => {}
         });
@@ -228,12 +242,37 @@ export class DashboardComponent implements OnInit {
     return this.authService.isAdmin();
   }
 
-  // Tab helpers
+  // Tab helpers — role-specific (platform admins use /admin, not this dashboard)
   getTabs(): DashboardTab[] {
-    if (this.canCreateContent()) {
-      return this.donorTabs;
+    const t = this.currentUser?.userType;
+    const profile: DashboardTab = { id: 'profile', label: 'Profile', icon: this.tabIcons.profile };
+    const settings: DashboardTab = { id: 'settings', label: 'Settings', icon: this.tabIcons.settings };
+
+    if (t === UserType.DONOR) {
+      return [
+        { id: 'campaigns', label: 'Campaigns', icon: this.tabIcons.campaigns },
+        { id: 'projects', label: 'Projects', icon: this.tabIcons.projects },
+        { id: 'events', label: 'Events', icon: this.tabIcons.events },
+        profile,
+        settings
+      ];
     }
-    return this.citizenTabs;
+    if (t === UserType.AMBASSADOR) {
+      return [
+        { id: 'events', label: 'Events', icon: this.tabIcons.events },
+        { id: 'volunteering', label: 'Volunteering', icon: this.tabIcons.volunteering },
+        { id: 'campaigns', label: 'Campaigns', icon: this.tabIcons.campaigns },
+        profile,
+        settings
+      ];
+    }
+    return [
+      { id: 'campaigns', label: 'Campaigns', icon: this.tabIcons.campaigns },
+      { id: 'events', label: 'Events', icon: this.tabIcons.events },
+      { id: 'projects', label: 'Projects', icon: this.tabIcons.projects },
+      profile,
+      settings
+    ];
   }
 
   setActiveTab(tabId: string): void {
@@ -329,7 +368,7 @@ export class DashboardComponent implements OnInit {
   getCampaignStatusColor(status: string): string {
     switch (status) {
       case 'ACTIVE': return 'bg-green-100 text-green-800';
-      case 'COMPLETED': return 'bg-blue-100 text-blue-800';
+      case 'COMPLETED': return 'bg-slate-100 text-slate-800';
       case 'DRAFT': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -340,7 +379,7 @@ export class DashboardComponent implements OnInit {
     switch (status) {
       case 'UPCOMING': return 'bg-yellow-100 text-yellow-800';
       case 'ONGOING': return 'bg-green-100 text-green-800';
-      case 'COMPLETED': return 'bg-blue-100 text-blue-800';
+      case 'COMPLETED': return 'bg-slate-100 text-slate-800';
       case 'CANCELLED': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -375,7 +414,7 @@ export class DashboardComponent implements OnInit {
 
   getPostTypeColor(type: string): string {
     switch (type) {
-      case 'EVENT_ANNOUNCEMENT':    return 'bg-blue-100 text-blue-800';
+      case 'EVENT_ANNOUNCEMENT':    return 'bg-emerald-100 text-emerald-800';
       case 'CAMPAIGN_ANNOUNCEMENT': return 'bg-green-100 text-green-800';
       case 'TESTIMONIAL':           return 'bg-emerald-100 text-emerald-800';
       default:                      return 'bg-gray-100 text-gray-700';

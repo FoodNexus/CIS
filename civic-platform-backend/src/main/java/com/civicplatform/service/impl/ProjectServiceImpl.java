@@ -43,6 +43,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + organizerId));
 
         Project project = projectMapper.toEntity(projectRequest);
+        project.setCreatedBy(organizer);
         project.submit();
 
         project = projectRepository.save(project);
@@ -106,6 +107,10 @@ public class ProjectServiceImpl implements ProjectService {
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found with id: " + projectId));
+
+        if (project.getCreatedBy() != null && project.getCreatedBy().getId().equals(userId)) {
+            throw new RuntimeException("Project creators cannot vote on their own project");
+        }
 
         if (projectVoteRepository.findByUserIdAndProjectId(userId, projectId).isPresent()) {
             throw new RuntimeException("User has already voted for this project");

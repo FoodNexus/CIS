@@ -190,6 +190,10 @@ public class EventServiceImpl implements EventService {
             throw new EventFullException("Event is full");
         }
 
+        if (event.getOrganizerId().equals(userId)) {
+            throw new RuntimeException("Event organizers cannot register as participants for their own event");
+        }
+
         EventParticipant existingParticipant = eventParticipantRepository.findByEventIdAndUserId(eventId, userId).orElse(null);
         if (existingParticipant != null) {
             if (existingParticipant.getStatus() == ParticipantStatus.CANCELLED) {

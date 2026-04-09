@@ -279,7 +279,7 @@ export class MyPostsComponent implements OnInit {
   getTypePillClass(type: PostType): string {
     switch (type) {
       case PostType.EVENT_ANNOUNCEMENT:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-emerald-100 text-emerald-800';
       case PostType.TESTIMONIAL:
         return 'bg-emerald-100 text-emerald-800';
       case PostType.STATUS:

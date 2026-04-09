@@ -24,6 +24,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/users/users.component').then(m => m.UsersComponent)
       },
       {
+        path: 'scan',
+        loadComponent: () =>
+          import('./features/admin/admin-user-scan/admin-user-scan.component').then(m => m.AdminUserScanComponent)
+      },
+      {
         path: 'users/:id',
         loadComponent: () =>
           import('./features/users/user-detail/user-detail.component').then(m => m.UserDetailComponent)

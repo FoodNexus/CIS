@@ -28,6 +28,8 @@ public class ProjectResponse {
     private String finalReport;
     private String organizerType;
     private LocalDateTime createdAt;
+    /** Creator user id — null for legacy rows before tracking was added. */
+    private Long createdById;
     private List<ProjectFundingResponse> fundings;
     
     // Helper methods

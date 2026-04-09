@@ -1,0 +1,96 @@
+<div class="min-h-screen bg-slate-100 px-4 py-8">
+  <div class="max-w-2xl mx-auto rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+    <div class="bg-slate-800 px-6 py-4 text-white">
+      <p class="text-xs font-bold uppercase tracking-wider text-slate-300">Users</p>
+      <h1 class="text-xl font-bold">Scan user QR</h1>
+      <p class="text-slate-300 text-sm mt-1">Point the camera at a member’s profile QR. The decoded data appears as a <strong>table</strong> below — then open their profile when ready.</p>
+    </div>
+
+    <div class="p-6 space-y-6">
+      <p *ngIf="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{{ errorMessage }}</p>
+      <p *ngIf="hintMessage" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">{{ hintMessage }}</p>
+
+      <div
+        *ngIf="identityPreview as preview"
+        class="rounded-xl border border-emerald-200 bg-white overflow-hidden shadow-sm">
+        <div class="bg-emerald-700 px-4 py-2.5 flex items-center justify-between gap-3">
+          <p class="text-white text-sm font-semibold">Decoded identity</p>
+          <button
+            type="button"
+            (click)="clearPreview()"
+            class="text-emerald-100 hover:text-white text-xs font-medium underline underline-offset-2">
+            Clear
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left border-collapse">
+            <tbody>
+              <tr *ngFor="let row of preview.rows" class="border-b border-slate-100 last:border-0">
+                <th scope="row" class="align-top py-2.5 px-4 font-medium text-slate-500 w-[40%] max-w-[10rem]">
+                  {{ row.label }}
+                </th>
+                <td class="py-2.5 px-4 text-slate-900 break-words">{{ row.value }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center gap-3">
+          <p *ngIf="resolvingUserId" class="text-xs text-slate-600">Looking up account by email…</p>
+          <button
+            type="button"
+            *ngIf="!resolvingUserId && preview.userId != null"
+            (click)="openUserProfile()"
+            [disabled]="resolvingUserId"
+            class="inline-flex items-center justify-center px-5 py-2 rounded-lg font-bold text-sm text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50">
+            Open user profile
+          </button>
+          <p *ngIf="!resolvingUserId && preview.userId == null && !errorMessage" class="text-xs text-amber-800">
+            Enter a numeric user id, or a QR that includes an email line (CivicIdentity/v2).
+          </p>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+        <div id="admin-qr-reader" class="w-full min-h-[240px] bg-black/5"></div>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <button
+          type="button"
+          *ngIf="!cameraActive"
+          (click)="startCamera()"
+          [disabled]="starting"
+          class="inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50">
+          {{ starting ? 'Starting…' : 'Start camera' }}
+        </button>
+        <button
+          type="button"
+          *ngIf="cameraActive"
+          (click)="stopCamera()"
+          class="inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm border border-slate-300 text-slate-800 bg-white hover:bg-slate-50">
+          Stop camera
+        </button>
+      </div>
+
+      <div class="border-t border-slate-100 pt-6">
+        <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Or paste QR text or user id</label>
+        <textarea
+          [(ngModel)]="manualInput"
+          rows="6"
+          placeholder="CivicIdentity/v2&#10;userName: …&#10;userType: …&#10;badge: …&#10;email: …"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:ring-1 focus:ring-slate-400 leading-relaxed"></textarea>
+        <p class="mt-2 text-xs text-slate-500">You can paste only the numeric id (e.g. <span class="font-mono text-slate-700">42</span>). Legacy JSON QR payloads are shown as a table too.</p>
+        <button
+          type="button"
+          (click)="decodeManual()"
+          class="mt-3 inline-flex items-center justify-center px-6 py-2.5 rounded-xl font-bold text-sm text-white bg-slate-800 hover:bg-slate-900">
+          Show as table
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500">
+        Current QR codes use plain text (CivicIdentity/v2), not JSON. Your id is resolved by email when needed. Re-download the PNG from <strong>Profile → Download QR</strong> if you still see old JSON.
+      </p>
+    </div>
+  </div>
+</div>

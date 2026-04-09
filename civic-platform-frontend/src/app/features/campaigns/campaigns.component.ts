@@ -56,6 +56,10 @@ export class CampaignsComponent implements OnInit {
     return this.router.url.split('?')[0].startsWith('/admin');
   }
 
+  dashboardLink(): string {
+    return this.isAdminRoute() ? '/admin/dashboard' : '/dashboard';
+  }
+
   campaignDetailLink(id: number): (string | number)[] {
     return this.isAdminRoute() ? ['/admin/campaigns', id] : ['/campaigns', id];
   }
@@ -135,7 +139,7 @@ export class CampaignsComponent implements OnInit {
       case 'DRAFT':
         return 'bg-gray-100 text-gray-800';
       case 'COMPLETED':
-        return 'bg-teal-100 text-teal-800';
+        return 'bg-slate-100 text-slate-800';
       case 'CANCELLED':
         return 'bg-red-100 text-red-800';
       default:
@@ -150,7 +154,7 @@ export class CampaignsComponent implements OnInit {
       case CampaignType.FUNDRAISING:
         return 'bg-gradient-to-r from-amber-500 to-orange-600';
       case CampaignType.VOLUNTEER:
-        return 'bg-gradient-to-r from-blue-500 to-emerald-600';
+        return 'bg-gradient-to-r from-green-500 to-emerald-600';
       case CampaignType.AWARENESS:
         return 'bg-gradient-to-r from-emerald-500 to-emerald-600';
       default:
@@ -177,6 +181,15 @@ export class CampaignsComponent implements OnInit {
   /** Backend: votes only on DRAFT campaigns to reach launch threshold. */
   canShowVote(c: Campaign): boolean {
     return c.status === CampaignStatus.DRAFT;
+  }
+
+  isCampaignCreator(c: Campaign): boolean {
+    const uid = this.authService.getCurrentUser()?.id;
+    return uid != null && c.createdById != null && c.createdById === uid;
+  }
+
+  canVoteOnCampaign(c: Campaign): boolean {
+    return this.canShowVote(c) && !this.isCampaignCreator(c);
   }
 
   hasVoteButtonDisabled(c: Campaign): boolean {

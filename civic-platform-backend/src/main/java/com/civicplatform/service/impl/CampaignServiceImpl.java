@@ -145,6 +145,10 @@ public class CampaignServiceImpl implements CampaignService {
             throw new RuntimeException("Can only vote for DRAFT campaigns");
         }
 
+        if (campaign.getCreatedBy() != null && campaign.getCreatedBy().getId().equals(userId)) {
+            throw new RuntimeException("Campaign creators cannot vote on their own campaign");
+        }
+
         // Check if already voted
         if (campaignVoteRepository.findByUserIdAndCampaignId(userId, campaignId).isPresent()) {
             throw new RuntimeException("User has already voted for this campaign");

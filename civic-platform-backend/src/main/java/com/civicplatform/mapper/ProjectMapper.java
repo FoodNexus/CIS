@@ -14,6 +14,7 @@ import java.util.List;
 public interface ProjectMapper {
 
     @Mapping(target = "fundings", source = "fundings")
+    @Mapping(target = "createdById", source = "createdBy.id")
     ProjectResponse toResponse(Project project);
     
     List<ProjectResponse> toResponseList(List<Project> projects);
@@ -27,6 +28,7 @@ public interface ProjectMapper {
     @Mapping(target = "completionDate", ignore = true)
     @Mapping(target = "finalReport", ignore = true)
     @Mapping(target = "fundings", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
     Project toEntity(ProjectRequest projectRequest);
     
     @Mapping(target = "id", ignore = true)
@@ -38,6 +40,7 @@ public interface ProjectMapper {
     @Mapping(target = "completionDate", ignore = true)
     @Mapping(target = "finalReport", ignore = true)
     @Mapping(target = "fundings", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
     void updateEntity(ProjectRequest projectRequest, @MappingTarget Project project);
 
     @AfterMapping
