@@ -22,6 +22,9 @@ export class AdminDashboardComponent implements OnInit {
   pendingPosts: Post[] = [];
   isLoading = true;
   errorMessage = '';
+  /** Inline moderation errors (approve/reject from dashboard). */
+  activityError = '';
+  actionPostId: number | null = null;
 
   constructor(
     private metricsService: MetricsService,
@@ -36,6 +39,7 @@ export class AdminDashboardComponent implements OnInit {
   load(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    this.activityError = '';
     const today = new Date().toISOString().split('T')[0];
 
     forkJoin({
@@ -109,5 +113,35 @@ export class AdminDashboardComponent implements OnInit {
       default:
         return 'bg-slate-100 text-slate-700 ring-1 ring-slate-200/80';
     }
+  }
+
+  approvePost(id: number): void {
+    this.activityError = '';
+    this.actionPostId = id;
+    this.postsService.approvePost(id).subscribe({
+      next: () => {
+        this.pendingPosts = this.pendingPosts.filter((p) => p.id !== id);
+        this.actionPostId = null;
+      },
+      error: (e) => {
+        this.activityError = e.error?.message || 'Approve failed';
+        this.actionPostId = null;
+      }
+    });
+  }
+
+  rejectPost(id: number): void {
+    this.activityError = '';
+    this.actionPostId = id;
+    this.postsService.rejectPost(id).subscribe({
+      next: () => {
+        this.pendingPosts = this.pendingPosts.filter((p) => p.id !== id);
+        this.actionPostId = null;
+      },
+      error: (e) => {
+        this.activityError = e.error?.message || 'Reject failed';
+        this.actionPostId = null;
+      }
+    });
   }
 }

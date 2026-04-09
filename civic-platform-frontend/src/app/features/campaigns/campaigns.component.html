@@ -2,8 +2,8 @@
   <div [ngClass]="isAdminRoute() ? 'w-full max-w-7xl mx-auto rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden' : 'w-full max-w-7xl'">
     <div *ngIf="isAdminRoute()" class="bg-slate-800 px-6 py-4 text-white">
       <p class="text-xs font-bold uppercase tracking-wider text-slate-300">Campagnes</p>
-      <h1 class="text-xl font-bold">Browse campaigns</h1>
-      <p class="text-slate-300 text-sm mt-1">Review and filter platform campaigns — same layout as Reports.</p>
+      <h1 class="text-xl font-bold">Campaign management</h1>
+      <p class="text-slate-300 text-sm mt-1">Search, filter, and open a row to review or edit — overview table (Reports-style).</p>
     </div>
     <div [ngClass]="isAdminRoute() ? 'p-6' : ''">
     <div *ngIf="!isAdminRoute()" class="flex flex-col space-y-1 mb-6">
@@ -11,37 +11,41 @@
       <p class="text-gray-500 text-sm">Découvrez et soutenez les campagnes actives</p>
     </div>
 
-    <!-- Top bar -->
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+    <!-- Toolbar -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
       <div class="flex-1 min-w-0">
         <input
           type="search"
           [(ngModel)]="searchQuery"
           placeholder="Rechercher une campagne..."
-          class="w-full max-w-md rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+          [ngClass]="isAdminRoute()
+            ? 'w-full max-w-md rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white focus:border-slate-400 focus:ring-1 focus:ring-slate-400'
+            : 'w-full max-w-md rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500'"
         />
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <select
           [(ngModel)]="statusFilter"
-          class="rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+          [ngClass]="isAdminRoute()
+            ? 'rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white focus:border-slate-400 focus:ring-1 focus:ring-slate-400'
+            : 'rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500 bg-white'"
         >
           <option value="">Tous les statuts</option>
           <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
         </select>
         <select
           [(ngModel)]="typeFilter"
-          class="rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+          [ngClass]="isAdminRoute()
+            ? 'rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white focus:border-slate-400 focus:ring-1 focus:ring-slate-400'
+            : 'rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500 bg-white'"
         >
           <option value="">Tous les types</option>
           <option *ngFor="let t of types" [value]="t">{{ t }}</option>
         </select>
         <a
           *ngIf="showNewCampaignButton()"
-          [routerLink]="isAdminRoute() ? '/admin/campaigns/new' : '/campaigns/new'"
-          [ngClass]="isAdminRoute()
-            ? 'inline-flex items-center px-6 py-3 rounded-xl font-bold text-sm text-white bg-slate-800 hover:bg-slate-900 transition-colors'
-            : 'inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors'">
+          routerLink="/campaigns/new"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
           + Nouvelle Campagne
         </a>
       </div>
@@ -50,14 +54,71 @@
     <div *ngIf="isLoading" class="flex justify-center items-center py-16">
       <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2" [ngClass]="isAdminRoute() ? 'border-slate-600' : 'border-emerald-600'"></div>
     </div>
-    <div *ngIf="errorMessage" class="bg-red-50 border-l-4 border-red-400 p-4 rounded mb-6 text-red-700">{{ errorMessage }}</div>
+    <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-700 text-sm">{{ errorMessage }}</div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Admin: Reports-style table -->
+    <div *ngIf="isAdminRoute() && !isLoading" class="rounded-xl border border-slate-200 bg-white overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-left">
+          <thead class="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th class="px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-500">Campaign</th>
+              <th class="px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-500">Type</th>
+              <th class="px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-500">Status</th>
+              <th class="px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-500">Funding</th>
+              <th class="px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-500">Dates</th>
+              <th class="px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-500">Votes</th>
+              <th class="px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-500">Creator</th>
+              <th class="px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-500 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let campaign of filteredCampaigns" class="border-b border-slate-100 hover:bg-slate-50/80">
+              <td class="px-4 py-3 align-top">
+                <span class="font-semibold text-slate-900">{{ campaign.name }}</span>
+                <p *ngIf="campaign.hashtag" class="text-xs text-slate-500 mt-0.5">{{ formatHashtag(campaign.hashtag) }}</p>
+              </td>
+              <td class="px-4 py-3 align-top text-slate-700 font-mono text-xs">{{ campaign.type }}</td>
+              <td class="px-4 py-3 align-top">
+                <span [ngClass]="getStatusPillClass(campaign.status)" class="inline-flex text-xs font-semibold px-2.5 py-0.5 rounded-full">{{ campaign.status }}</span>
+              </td>
+              <td class="px-4 py-3 align-top text-slate-700 tabular-nums">
+                <span class="font-medium">{{ getMoneyProgressPct(campaign) }}%</span>
+                <span *ngIf="campaign.neededAmount != null" class="block text-xs text-slate-500 mt-0.5">
+                  {{ campaign.goalAmount ?? 0 | number:'1.0-0' }} / {{ campaign.neededAmount | number:'1.0-0' }} TND
+                </span>
+              </td>
+              <td class="px-4 py-3 align-top text-slate-600 text-xs whitespace-nowrap">
+                <ng-container *ngIf="campaign.startDate || campaign.endDate">
+                  {{ campaign.startDate | date:'mediumDate' }}
+                  <span *ngIf="campaign.startDate && campaign.endDate"> → </span>
+                  {{ campaign.endDate | date:'mediumDate' }}
+                </ng-container>
+                <span *ngIf="!campaign.startDate && !campaign.endDate">—</span>
+              </td>
+              <td class="px-4 py-3 align-top text-slate-700 tabular-nums">{{ campaign.voteCount ?? 0 }}</td>
+              <td class="px-4 py-3 align-top text-slate-700 text-xs">{{ campaign.createdByName || '—' }}</td>
+              <td class="px-4 py-3 align-top text-right">
+                <a
+                  [routerLink]="campaignDetailLink(campaign.id)"
+                  class="inline-flex items-center justify-center px-4 py-2 rounded-full text-xs font-bold text-white bg-slate-800 hover:bg-slate-900">
+                  Manage
+                </a>
+              </td>
+            </tr>
+            <tr *ngIf="filteredCampaigns.length === 0">
+              <td class="px-4 py-10 text-center text-slate-400" colspan="8">Aucune campagne ne correspond aux filtres.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Member: card grid -->
+    <div *ngIf="!isAdminRoute()" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div
         *ngFor="let campaign of filteredCampaigns"
-        [ngClass]="isAdminRoute()
-          ? 'bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-slate-200 overflow-hidden flex flex-col'
-          : 'bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-gray-100 overflow-hidden flex flex-col'">
+        class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-gray-100 overflow-hidden flex flex-col">
         <div [class]="getTypeHeaderClass(campaign.type) + ' px-4 py-3 text-white flex items-start justify-between gap-2'">
           <span class="text-xs font-semibold uppercase tracking-wide bg-white/20 px-2 py-0.5 rounded-full">{{ campaign.type }}</span>
           <span [ngClass]="getStatusPillClass(campaign.status)" class="text-xs font-medium px-2 py-0.5 rounded-full shrink-0">{{ campaign.status }}</span>
@@ -116,9 +177,7 @@
             </ng-container>
             <a
               [routerLink]="campaignDetailLink(campaign.id)"
-              [ngClass]="isAdminRoute()
-                ? 'inline-flex items-center px-3 py-2 rounded-xl text-sm font-bold text-slate-800 border border-slate-300 hover:bg-slate-50'
-                : 'inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-emerald-600 border border-emerald-200 hover:bg-emerald-50'">
+              class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-emerald-600 border border-emerald-200 hover:bg-emerald-50">
               Voir détails →
             </a>
           </div>
@@ -129,7 +188,7 @@
       </div>
     </div>
 
-    <div *ngIf="!isLoading && filteredCampaigns.length === 0" class="text-center py-16 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+    <div *ngIf="!isLoading && filteredCampaigns.length === 0 && !isAdminRoute()" class="text-center py-16 rounded-xl border border-dashed border-gray-200 bg-white/60">
       <svg class="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
       </svg>

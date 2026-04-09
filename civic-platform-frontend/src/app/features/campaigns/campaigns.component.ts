@@ -47,8 +47,9 @@ export class CampaignsComponent implements OnInit {
     return this.authService.canCreateContent();
   }
 
+  /** Members create campaigns; admin console is manage-only (no create CTA). */
   showNewCampaignButton(): boolean {
-    return this.canCreateCampaign() || (this.isAdminRoute() && this.authService.isAdmin());
+    return this.canCreateCampaign() && !this.isAdminRoute();
   }
 
   isAdminRoute(): boolean {

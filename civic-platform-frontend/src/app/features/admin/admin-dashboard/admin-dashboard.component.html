@@ -155,8 +155,9 @@
       <section class="admin-dashboard__section" aria-labelledby="section-recent">
         <div class="mb-4 sm:mb-5">
           <h2 id="section-recent" class="admin-dashboard__section-title text-base sm:text-lg">Recent activity</h2>
-          <p class="admin-dashboard__section-desc">New members and posts waiting for review</p>
+          <p class="admin-dashboard__section-desc">Review new members and moderate pending posts — actions without leaving the overview</p>
         </div>
+        <p *ngIf="activityError" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">{{ activityError }}</p>
 
         <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.04]">
           <div class="grid grid-cols-1 divide-y divide-slate-100 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
@@ -172,7 +173,8 @@
                     <tr>
                       <th class="!pl-4 sm:!pl-5">Member</th>
                       <th>Type</th>
-                      <th class="!pr-4 sm:!pr-5 text-right">Joined</th>
+                      <th class="text-right">Joined</th>
+                      <th class="!pr-4 sm:!pr-5 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -193,10 +195,17 @@
                           {{ u.userType || '—' }}
                         </span>
                       </td>
-                      <td class="!pr-4 text-right text-sm text-slate-600 sm:!pr-5">{{ u.createdAt | date:'mediumDate' }}</td>
+                      <td class="text-right text-sm text-slate-600">{{ u.createdAt | date:'mediumDate' }}</td>
+                      <td class="!pr-4 text-right sm:!pr-5">
+                        <a
+                          [routerLink]="['/admin/users', u.id]"
+                          class="inline-flex items-center justify-center rounded-full bg-slate-800 px-3 py-1.5 text-[0.65rem] font-bold text-white shadow-sm transition hover:bg-slate-900">
+                          Manage
+                        </a>
+                      </td>
                     </tr>
                     <tr *ngIf="recentUsers.length === 0">
-                      <td colspan="3" class="admin-table__empty">No registrations to show.</td>
+                      <td colspan="4" class="admin-table__empty">No registrations to show.</td>
                     </tr>
                   </tbody>
                 </table>
@@ -219,22 +228,41 @@
                   <thead>
                     <tr>
                       <th class="!pl-4 sm:!pl-5">Creator</th>
-                      <th class="!pr-4 sm:!pr-5">Preview</th>
+                      <th>Preview</th>
+                      <th class="!pr-4 sm:!pr-5 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr *ngFor="let p of pendingPosts">
-                      <td class="!pl-4 sm:!pl-5">
+                      <td class="!pl-4 sm:!pl-5 align-top">
                         <p class="font-semibold text-slate-900">{{ p.creator }}</p>
                         <p class="text-[0.65rem] text-slate-400">{{ p.createdAt | date:'short' }}</p>
                       </td>
-                      <td class="!pr-4 sm:!pr-5">
+                      <td class="align-top min-w-0">
                         <span class="mb-1 inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase text-slate-600">{{ p.type }}</span>
                         <p class="line-clamp-2 text-sm text-slate-600">{{ p.content }}</p>
                       </td>
+                      <td class="!pr-4 sm:!pr-5 align-top text-right whitespace-nowrap">
+                        <div class="inline-flex flex-wrap justify-end gap-1.5">
+                          <button
+                            type="button"
+                            (click)="approvePost(p.id)"
+                            [disabled]="actionPostId === p.id"
+                            class="inline-flex items-center justify-center rounded-full bg-emerald-600 px-3 py-1.5 text-[0.65rem] font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50">
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            (click)="rejectPost(p.id)"
+                            [disabled]="actionPostId === p.id"
+                            class="inline-flex items-center justify-center rounded-full bg-red-600 px-3 py-1.5 text-[0.65rem] font-bold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-50">
+                            Reject
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                     <tr *ngIf="pendingPosts.length === 0">
-                      <td colspan="2" class="admin-table__empty">No posts in the queue. You’re all caught up.</td>
+                      <td colspan="3" class="admin-table__empty">No posts in the queue. You’re all caught up.</td>
                     </tr>
                   </tbody>
                 </table>
