@@ -38,9 +38,6 @@ import { BadgeComponent } from '@shared/components/badge/badge.component';
                 <span class="text-white text-xs font-bold uppercase tracking-wider">My QR code</span>
               </div>
               <div class="p-5 space-y-5">
-                <p class="text-sm text-gray-600">
-                  The PNG encodes <strong>plain labeled lines</strong> (username, role, badge, email) — <strong>not</strong> JSON and <strong>not</strong> your internal user id. Staff resolve your account via email in the admin scanner.
-                </p>
                 <div class="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
                   <p class="text-xs font-bold uppercase tracking-wide text-emerald-800 mb-3">What’s in the QR (same as download)</p>
                   <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
@@ -50,7 +47,6 @@ import { BadgeComponent } from '@shared/components/badge/badge.component';
                     <div class="flex flex-col sm:flex-row sm:gap-2"><dt class="text-gray-500 shrink-0">Badge</dt><dd class="text-gray-900">{{ user.badge || 'NONE' }}</dd></div>
                     <div class="flex flex-col sm:flex-row sm:gap-2 sm:col-span-2"><dt class="text-gray-500 shrink-0">Email</dt><dd class="text-gray-900 break-all">{{ user.email }}</dd></div>
                   </dl>
-                  <p class="text-xs text-gray-500 mt-3">Your account id ({{ user.id }}) stays in the app only — it is not placed inside the QR.</p>
                 </div>
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
                   <button type="button" (click)="downloadMyQr()" [disabled]="qrDownloading"
