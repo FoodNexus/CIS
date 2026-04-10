@@ -23,7 +23,11 @@
             <tr *ngFor="let p of posts" class="border-t border-slate-100">
               <td class="px-4 py-3">{{ p.creator }}</td>
               <td class="px-4 py-3">{{ p.type }}</td>
-              <td class="px-4 py-3 max-w-md whitespace-pre-wrap">{{ p.content }}</td>
+              <td class="px-4 py-3 max-w-md">
+                <span *ngIf="p.content" class="whitespace-pre-wrap">{{ p.content.length > 200 ? (p.content | slice:0:200) + '…' : p.content }}</span>
+                <span *ngIf="!p.content" class="text-slate-400 italic">(no text)</span>
+                <span *ngIf="p.attachments?.length" class="block text-xs text-slate-500 mt-1">{{ p.attachments!.length }} media</span>
+              </td>
               <td class="px-4 py-3 text-right space-x-2">
                 <button type="button"
                         (click)="approve(p.id)"

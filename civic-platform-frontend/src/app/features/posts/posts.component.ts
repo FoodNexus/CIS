@@ -2,11 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { PostsService, Post } from '@core/services/posts.service';
+import { RichContentComponent } from '@shared/components/rich-content/rich-content.component';
+import { ZoomableImageDirective } from '@shared/directives/zoomable-image.directive';
 
 @Component({
   selector: 'app-posts',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, RichContentComponent, ZoomableImageDirective],
   templateUrl: './posts.component.html',
   styleUrls: ['./posts.component.scss']
 })
@@ -16,7 +18,7 @@ export class PostsComponent implements OnInit {
   errorMessage = '';
   likedPosts = new Set<number>();
 
-  constructor(private postsService: PostsService) {}
+  constructor(public postsService: PostsService) {}
 
   ngOnInit(): void {
     this.loadPosts();

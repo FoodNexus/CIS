@@ -1,0 +1,60 @@
+<div class="flex flex-wrap items-center gap-2 relative">
+  <input #fileInput type="file" multiple accept="image/*,video/mp4,video/webm,video/quicktime"
+         class="hidden" (change)="onFileInput($event)" [disabled]="disabled" />
+
+  <button type="button" (click)="fileInput.click()" [disabled]="disabled"
+          class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-white hover:bg-emerald-50 text-gray-700 disabled:opacity-50"
+          title="Attach images or video">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+    </svg>
+    Media
+  </button>
+
+  <div class="relative">
+    <button type="button" (click)="toggleEmoji()" [disabled]="disabled"
+            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-white hover:bg-emerald-50 text-gray-700 disabled:opacity-50">
+      😊 Emoji
+    </button>
+    <div *ngIf="emojiOpen"
+         class="absolute z-50 mt-1 left-0 w-[min(20rem,92vw)] max-h-52 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg p-2 grid grid-cols-8 gap-1">
+      <button type="button" *ngFor="let e of emojiPalette" (click)="pickEmoji(e)"
+              class="text-lg leading-none p-1 rounded hover:bg-emerald-50">{{ e }}</button>
+    </div>
+  </div>
+
+  <div class="relative">
+    <button type="button" (click)="toggleGif()" [disabled]="disabled"
+            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-white hover:bg-emerald-50 text-gray-700 disabled:opacity-50">
+      GIF
+    </button>
+    <div *ngIf="gifOpen"
+         class="absolute z-50 mt-1 left-0 w-[min(22rem,92vw)] rounded-xl border border-gray-200 bg-white shadow-lg p-3 space-y-2">
+      <p *ngIf="!giphyKey" class="text-xs text-gray-600">
+        Add <code class="bg-gray-100 px-1 rounded">giphyApiKey</code> in <code class="bg-gray-100 px-1 rounded">environment.ts</code> to search Giphy, or paste a GIF URL below.
+      </p>
+      <div *ngIf="giphyKey" class="flex gap-2">
+        <input [(ngModel)]="gifQuery" (keyup.enter)="onGifSearch()" placeholder="Search GIFs…"
+               class="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5" />
+        <button type="button" (click)="onGifSearch()" [disabled]="gifLoading"
+                class="text-xs px-2 py-1 rounded-lg bg-emerald-600 text-white disabled:opacity-50">Search</button>
+      </div>
+      <p *ngIf="gifError" class="text-xs text-red-600">{{ gifError }}</p>
+      <div *ngIf="gifLoading" class="text-xs text-gray-500">Loading…</div>
+      <div *ngIf="gifResults.length" class="grid grid-cols-3 gap-1 max-h-40 overflow-y-auto">
+        <button type="button" *ngFor="let g of gifResults" (click)="selectGif(g.url)" class="p-0 rounded overflow-hidden border border-gray-100 hover:ring-2 ring-emerald-400">
+          <img [src]="g.preview" alt="" class="w-full h-16 object-cover" />
+        </button>
+      </div>
+      <div class="pt-1 border-t border-gray-100">
+        <label class="text-[10px] text-gray-500 uppercase font-semibold">Paste GIF URL</label>
+        <div class="flex gap-2 mt-1">
+          <input [(ngModel)]="pasteGifUrl" placeholder="https://…"
+                 class="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5" />
+          <button type="button" (click)="insertPastedGif()" class="text-xs px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200">Insert</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

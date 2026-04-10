@@ -58,13 +58,21 @@
           </div>
         </div>
 
-        <!-- Content -->
-        <p class="text-gray-800 leading-relaxed text-base whitespace-pre-line">{{ post.content }}</p>
+        <!-- Text + inline GIF URLs -->
+        <app-rich-content *ngIf="post.content" [content]="post.content"></app-rich-content>
+        <p *ngIf="!post.content && (!post.attachments || post.attachments.length === 0)" class="text-gray-400 text-sm italic">empty post</p>
+
+        <!-- Uploaded media -->
+        <div *ngIf="post.attachments?.length" class="mt-4 space-y-3">
+          <ng-container *ngFor="let a of post.attachments">
+            <img *ngIf="a.kind === 'IMAGE'" [src]="mediaUrl(a.url)" [appZoomableImage]="mediaUrl(a.url)" alt="" class="max-w-full rounded-lg border border-gray-100" />
+            <video *ngIf="a.kind === 'VIDEO'" [src]="mediaUrl(a.url)" controls class="max-w-full rounded-lg border border-gray-100" playsinline></video>
+          </ng-container>
+        </div>
       </div>
 
       <!-- Actions Bar -->
       <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-6">
-        <!-- Like/Unlike toggle -->
         <button (click)="toggleLike()"
                 class="flex items-center gap-2 transition-colors group"
                 [class.text-red-500]="isLiked"
@@ -78,7 +86,6 @@
           <span class="text-sm font-medium">{{ post.likesCount || 0 }} {{ post.likesCount === 1 ? 'like' : 'likes' }}</span>
         </button>
 
-        <!-- Comment count -->
         <div class="flex items-center gap-2 text-gray-500">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -111,7 +118,13 @@
                 <span class="font-semibold text-sm text-gray-900">{{ comment.authorName }}</span>
                 <span class="text-xs text-gray-400">{{ comment.createdAt | date:'MMM d, y · h:mm a' }}</span>
               </div>
-              <p class="mt-1 text-sm text-gray-700 leading-relaxed">{{ comment.content }}</p>
+              <app-rich-content *ngIf="comment.content" class="mt-1 block text-sm" [content]="comment.content"></app-rich-content>
+              <div *ngIf="comment.attachments?.length" class="mt-2 space-y-2">
+                <ng-container *ngFor="let a of comment.attachments">
+                  <img *ngIf="a.kind === 'IMAGE'" [src]="mediaUrl(a.url)" [appZoomableImage]="mediaUrl(a.url)" alt="" class="max-w-full rounded-lg border border-gray-100" />
+                  <video *ngIf="a.kind === 'VIDEO'" [src]="mediaUrl(a.url)" controls class="max-w-full rounded-lg border border-gray-100" playsinline></video>
+                </ng-container>
+              </div>
             </div>
           </div>
         </div>
@@ -126,17 +139,34 @@
       <div class="px-6 py-5 bg-gray-50 border-t border-gray-100">
         <form [formGroup]="commentForm" (ngSubmit)="addComment()" class="space-y-3">
           <textarea
+            #commentTextarea
             formControlName="content"
             rows="3"
-            placeholder="Write a comment..."
+            placeholder="Write a comment… Emoji, GIFs, or attach media."
             class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent placeholder-gray-400 bg-white">
           </textarea>
+
+          <app-composer-toolbar
+            [disabled]="isSubmitting"
+            [maxFiles]="10"
+            (insertText)="insertInComment($event)"
+            (filesPicked)="onCommentFiles($event)">
+          </app-composer-toolbar>
+
+          <div *ngIf="commentFiles.length" class="flex flex-wrap gap-2">
+            <span *ngFor="let f of commentFiles; let i = index"
+                  class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white text-emerald-900 text-xs border border-emerald-100">
+              {{ f.name }}
+              <button type="button" (click)="removeCommentFile(i)" class="text-emerald-700 font-bold">×</button>
+            </span>
+          </div>
+
           <div class="flex items-center justify-between">
             <p *ngIf="errorMessage" class="text-xs text-red-600">{{ errorMessage }}</p>
             <div class="ml-auto">
               <button
                 type="submit"
-                [disabled]="commentForm.invalid || isSubmitting"
+                [disabled]="isSubmitting"
                 class="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 <svg *ngIf="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

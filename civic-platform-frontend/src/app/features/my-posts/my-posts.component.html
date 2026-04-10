@@ -58,7 +58,14 @@
               {{ post.status }}
             </span>
           </div>
-          <p class="text-gray-800 whitespace-pre-wrap leading-relaxed">{{ post.content }}</p>
+          <app-rich-content *ngIf="post.content" class="text-gray-800" [content]="post.content"></app-rich-content>
+          <p *ngIf="!post.content" class="text-gray-400 text-sm italic">(no text)</p>
+          <div *ngIf="post.attachments?.length" class="mt-3 flex flex-wrap gap-2">
+            <ng-container *ngFor="let a of post.attachments">
+              <img *ngIf="a.kind === 'IMAGE'" [src]="postsService.mediaAttachmentUrl(a.url)" [appZoomableImage]="postsService.mediaAttachmentUrl(a.url)" alt="" class="h-16 w-16 object-cover rounded-lg border border-gray-100" />
+              <span *ngIf="a.kind === 'VIDEO'" class="h-16 w-16 rounded-lg border border-gray-100 bg-gray-900 text-white text-[10px] flex items-center justify-center font-semibold">VIDEO</span>
+            </ng-container>
+          </div>
           <p class="text-xs text-gray-400 mt-4">🕐 {{ formatRelative(post.createdAt) }}</p>
           <div class="flex flex-wrap gap-6 mt-4 text-sm text-gray-600">
             <span>❤️ {{ post.likesCount ?? 0 }} likes</span>

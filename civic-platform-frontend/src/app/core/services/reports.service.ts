@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ReportsService {
-  private readonly API_URL = 'http://localhost:8081/api/admin/reports';
+  private readonly baseUrl = `${environment.apiUrl}/admin/reports`;
 
   constructor(private http: HttpClient) {}
 
@@ -21,7 +22,7 @@ export class ReportsService {
     if (params.type) {
       httpParams = httpParams.set('type', params.type);
     }
-    return this.http.get(this.API_URL, {
+    return this.http.get(this.baseUrl, {
       params: httpParams,
       responseType: 'blob'
     });

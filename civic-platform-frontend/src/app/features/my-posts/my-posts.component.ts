@@ -14,11 +14,13 @@ import {
   PostType,
   PostsService
 } from '@core/services/posts.service';
+import { RichContentComponent } from '@shared/components/rich-content/rich-content.component';
+import { ZoomableImageDirective } from '@shared/directives/zoomable-image.directive';
 
 @Component({
   selector: 'app-my-posts',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RichContentComponent, ZoomableImageDirective],
   templateUrl: './my-posts.component.html',
   styleUrls: ['./my-posts.component.scss']
 })
@@ -47,7 +49,7 @@ export class MyPostsComponent implements OnInit {
   readonly postStatuses = Object.values(PostStatus);
 
   constructor(
-    private postsService: PostsService,
+    public postsService: PostsService,
     private fb: FormBuilder
   ) {
     this.postForm = this.fb.group({
@@ -110,7 +112,7 @@ export class MyPostsComponent implements OnInit {
     this.editingPost = post;
     this.postForm.patchValue({
       type: post.type,
-      content: post.content
+      content: post.content ?? ''
     });
     this.showModal = true;
   }

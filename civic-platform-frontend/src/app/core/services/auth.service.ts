@@ -146,8 +146,13 @@ export class AuthService {
     }
     return this.http.get<User>(`${environment.apiUrl}/users/me`).pipe(
       tap((user) => {
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
-        this.currentUserSubject.next(user);
+        const prev = this.getCurrentUser();
+        const merged: User =
+          prev && prev.id === user.id
+            ? { ...user, profilePictureRevision: prev.profilePictureRevision }
+            : user;
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(merged));
+        this.currentUserSubject.next(merged);
       }),
       catchError(() => of(this.getCurrentUser()))
     );
@@ -182,7 +187,8 @@ export class AuthService {
       companyName: isAdmin ? undefined : response.companyName,
       associationName: isAdmin ? undefined : response.associationName,
       contactName: isAdmin ? undefined : response.contactName,
-      contactEmail: isAdmin ? undefined : response.contactEmail
+      contactEmail: isAdmin ? undefined : response.contactEmail,
+      hasProfilePicture: isAdmin ? undefined : response.hasProfilePicture
     };
 
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));

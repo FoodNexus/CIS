@@ -1,0 +1,43 @@
+<div
+  class="fixed inset-0 z-[300] flex flex-col bg-black/92 backdrop-blur-sm"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Image preview"
+  (click)="backdropClick()">
+
+  <div class="flex items-center justify-between gap-2 px-3 py-2 text-white/95 shrink-0 border-b border-white/10"
+       (click)="stopClose($event)">
+    <span class="text-xs truncate opacity-80 max-w-[50%]">{{ src }}</span>
+    <div class="flex items-center gap-1 flex-wrap justify-end">
+      <button type="button" (click)="zoomOut(); $event.stopPropagation()"
+              class="rounded-lg px-2.5 py-1.5 text-sm font-semibold bg-white/10 hover:bg-white/20">−</button>
+      <button type="button" (click)="resetView(); $event.stopPropagation()"
+              class="rounded-lg px-2.5 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/20">Reset</button>
+      <button type="button" (click)="zoomIn(); $event.stopPropagation()"
+              class="rounded-lg px-2.5 py-1.5 text-sm font-semibold bg-white/10 hover:bg-white/20">+</button>
+      <span class="text-xs tabular-nums px-1 min-w-[3rem] text-center">{{ (scale * 100) | number:'1.0-0' }}%</span>
+      <button type="button" (click)="close(); $event.stopPropagation()"
+              class="ml-1 rounded-lg px-3 py-1.5 text-sm font-semibold bg-white/15 hover:bg-white/25">Close</button>
+    </div>
+  </div>
+
+  <div
+    class="flex-1 min-h-0 overflow-hidden flex items-center justify-center p-2 sm:p-4 cursor-grab active:cursor-grabbing"
+    (wheel)="onWheel($event)"
+    (click)="stopClose($event)">
+    <img
+      #imgEl
+      [src]="src"
+      [style.transform]="transform"
+      [style.transformOrigin]="'center center'"
+      (mousedown)="onPanStart($event)"
+      (touchstart)="onPanStart($event)"
+      draggable="false"
+      alt=""
+      class="max-w-[min(100%,96vw)] max-h-[min(100%,85vh)] object-contain select-none shadow-2xl rounded-sm" />
+  </div>
+
+  <p class="text-center text-[11px] text-white/50 pb-2 shrink-0 px-4">
+    Scroll to zoom · drag when zoomed · Esc to close
+  </p>
+</div>

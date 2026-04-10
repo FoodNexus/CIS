@@ -52,6 +52,11 @@ export interface User {
   associationName?: string;
   contactName?: string;
   contactEmail?: string;
+
+  /** From API — user has uploaded a profile image. */
+  hasProfilePicture?: boolean;
+  /** Client-only cache-bust for avatar URLs after upload (not from API). */
+  profilePictureRevision?: number;
 }
 
 export interface LoginRequest {
@@ -107,4 +112,6 @@ export interface AuthResponse {
   contactEmail?: string;
 
   badgeProgress?: BadgeProgressInfo;
+
+  hasProfilePicture?: boolean;
 }

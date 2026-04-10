@@ -46,7 +46,7 @@ export class AdminReportsComponent implements OnInit {
           const link = document.createElement('a');
           link.href = url;
           const ext = this.reportFormat === 'pdf' ? 'pdf' : 'csv';
-          link.download = `nurtriflow-CIS-report.${ext}`;
+          link.download = `civic-platform-user-activity-${this.reportFrom}-to-${this.reportTo}.${ext}`;
           link.click();
           window.URL.revokeObjectURL(url);
           this.reportDownloading = false;

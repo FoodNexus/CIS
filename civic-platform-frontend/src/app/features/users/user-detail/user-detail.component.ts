@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { UsersService } from '@core/services/users.service';
 import { User } from '@core/models/auth.models';
+import { ZoomableImageDirective } from '@shared/directives/zoomable-image.directive';
 
 @Component({
   selector: 'app-user-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ZoomableImageDirective],
   templateUrl: './user-detail.component.html',
   styleUrls: ['./user-detail.component.scss']
 })
@@ -31,6 +32,13 @@ export class UserDetailComponent implements OnInit {
     if (id) {
       this.loadUser(Number(id));
     }
+  }
+
+  avatarUrl(u: User): string {
+    if (!u?.hasProfilePicture || !u.id) {
+      return '';
+    }
+    return this.usersService.profilePictureUrl(u.id, u.profilePictureRevision);
   }
 
   loadUser(id: number): void {

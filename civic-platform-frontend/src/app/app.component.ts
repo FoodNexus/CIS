@@ -3,13 +3,16 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AuthService } from './core/services/auth.service';
+import { UsersService } from './core/services/users.service';
 import { User } from './core/models/auth.models';
 import { BadgeComponent } from './shared/components/badge/badge.component';
+import { ImageZoomViewerComponent } from './shared/components/image-zoom-viewer/image-zoom-viewer.component';
+import { ImageViewerService } from './core/services/image-viewer.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, BadgeComponent],
+  imports: [CommonModule, RouterModule, BadgeComponent, ImageZoomViewerComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
@@ -24,7 +27,9 @@ export class AppComponent {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private usersService: UsersService,
+    private router: Router,
+    public imageViewer: ImageViewerService
   ) {
     this.currentUser$ = this.authService.currentUser$;
   }
@@ -80,6 +85,10 @@ export class AppComponent {
 
   isAdmin(): boolean {
     return this.authService.isAdmin();
+  }
+
+  profileAvatarUrl(user: User): string {
+    return this.usersService.profilePictureUrl(user.id, user.profilePictureRevision);
   }
 
   /** Login/register are full-screen: no top nav or sidebar (even if a session exists). */
