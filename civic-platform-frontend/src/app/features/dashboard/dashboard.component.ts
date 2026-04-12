@@ -11,6 +11,8 @@ import { EventsService, Event, EventParticipation } from '@core/services/events.
 import { ProjectsService, Project, ProjectFundingHistory } from '@core/services/projects.service';
 import { PostsService, Post } from '@core/services/posts.service';
 import { User, UserType } from '@core/models/auth.models';
+import { FeedResponse } from '@core/models/feed.model';
+import { RecommendationsService } from '@core/services/recommendations.service';
 
 interface DashboardTab {
   id: string;
@@ -69,6 +71,10 @@ export class DashboardComponent implements OnInit {
   feedCampaigns: Campaign[] = [];
   feedEvents: Event[] = [];
   feedProjects: Project[] = [];
+  /** Recommended posts (ML); citizen / participant / ambassador when ML feed is used. */
+  feedPosts: Post[] = [];
+  feedModelVersion?: string;
+  feedColdStart?: boolean;
 
   // Participation data
   myParticipations: EventParticipation[] = [];
@@ -89,7 +95,8 @@ export class DashboardComponent implements OnInit {
     private campaignsService: CampaignsService,
     private eventsService: EventsService,
     private projectsService: ProjectsService,
-    private postsService: PostsService
+    private postsService: PostsService,
+    private recommendationsService: RecommendationsService
   ) {}
 
   ngOnInit(): void {
@@ -121,6 +128,18 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  /** ML feed applies to authenticated non-admin users who are not donors. */
+  shouldUseMlFeed(): boolean {
+    const u = this.currentUser;
+    if (!u || u.isAdmin) {
+      return false;
+    }
+    if (u.userType === UserType.DONOR) {
+      return false;
+    }
+    return true;
+  }
+
   loadAllData(): void {
     this.isLoading = true;
     this.error = null;
@@ -133,6 +152,9 @@ export class DashboardComponent implements OnInit {
       this.eventsService.getMyParticipations().pipe(catchError(() => of([]))),
       this.projectsService.getMyFundings().pipe(catchError(() => of([])))
     ];
+    if (this.shouldUseMlFeed()) {
+      requests.push(this.recommendationsService.getFeed().pipe(catchError(() => of(null))));
+    }
 
     forkJoin(requests).subscribe({
       next: (results: any[]) => {
@@ -140,11 +162,25 @@ export class DashboardComponent implements OnInit {
         const allEvents: Event[] = results[1] || [];
         const allProjects: Project[] = results[2] || [];
         const allPosts: Post[] = results[3] || [];
+        const feed: FeedResponse | null =
+          this.shouldUseMlFeed() && results.length > 6 ? results[6] : null;
         const uid = this.currentUser?.id;
 
-        this.feedCampaigns = allCampaigns;
         this.feedEvents = allEvents;
-        this.feedProjects = allProjects;
+
+        if (feed) {
+          this.feedCampaigns = feed.campaigns?.length ? feed.campaigns : allCampaigns;
+          this.feedProjects = feed.projects?.length ? feed.projects : allProjects;
+          this.feedPosts = feed.posts || [];
+          this.feedModelVersion = feed.modelVersion;
+          this.feedColdStart = feed.coldStart;
+        } else {
+          this.feedCampaigns = allCampaigns;
+          this.feedProjects = allProjects;
+          this.feedPosts = [];
+          this.feedModelVersion = undefined;
+          this.feedColdStart = undefined;
+        }
 
         if (uid) {
           this.myCampaigns = allCampaigns.filter(c => c.createdById === uid);

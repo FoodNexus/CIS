@@ -37,6 +37,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/**", "/api/actuator/**").permitAll()
                 .requestMatchers("/auth/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/admin/reports/**").hasRole("ADMIN")
                 .requestMatchers("/admin/**").hasRole("ADMIN")

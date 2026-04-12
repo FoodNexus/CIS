@@ -33,6 +33,8 @@ export interface Post {
   likesCount: number;
   campaignId?: number;
   campaignName?: string;
+  /** Present when returned from the ML recommendation feed. */
+  isRecommended?: boolean;
   comments?: Comment[];
   attachments?: MediaAttachment[];
 }

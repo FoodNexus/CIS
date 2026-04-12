@@ -26,6 +26,9 @@ export class AdminDashboardComponent implements OnInit {
   activityError = '';
   actionPostId: number | null = null;
 
+  mlRetrainPending = false;
+  mlRetrainMessage = '';
+
   constructor(
     private metricsService: MetricsService,
     private postsService: PostsService,
@@ -126,6 +129,21 @@ export class AdminDashboardComponent implements OnInit {
       error: (e) => {
         this.activityError = e.error?.message || 'Approve failed';
         this.actionPostId = null;
+      }
+    });
+  }
+
+  retrainMlModel(): void {
+    this.mlRetrainPending = true;
+    this.mlRetrainMessage = '';
+    this.metricsService.triggerMlRetrain().subscribe({
+      next: () => {
+        this.mlRetrainPending = false;
+        this.mlRetrainMessage = 'Réentraînement accepté.';
+      },
+      error: () => {
+        this.mlRetrainPending = false;
+        this.mlRetrainMessage = 'Échec du lancement.';
       }
     });
   }

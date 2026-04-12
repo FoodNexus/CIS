@@ -30,6 +30,8 @@ public class ProjectResponse {
     private LocalDateTime createdAt;
     /** Creator user id — null for legacy rows before tracking was added. */
     private Long createdById;
+    /** Set when this project is returned from the ML recommendation feed. */
+    private Boolean isRecommended;
     private List<ProjectFundingResponse> fundings;
     
     // Helper methods

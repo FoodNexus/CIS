@@ -36,6 +36,8 @@ public class CampaignResponse {
     private Long createdById;
     private String createdByName;
     private Integer voteCount;
+    /** Set when this campaign is returned from the ML recommendation feed. */
+    private Boolean isRecommended;
     private List<PostResponse> posts;
     
     // Helper methods

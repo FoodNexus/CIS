@@ -39,6 +39,19 @@ public interface PostMapper {
         }
         return posts.stream().map(this::toSummaryResponse).collect(Collectors.toList());
     }
+
+    default List<PostResponse> toResponseList(List<Post> posts, boolean isRecommended) {
+        if (posts == null) {
+            return null;
+        }
+        return posts.stream()
+                .map(p -> {
+                    PostResponse r = toSummaryResponse(p);
+                    r.setIsRecommended(isRecommended);
+                    return r;
+                })
+                .collect(Collectors.toList());
+    }
     
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

@@ -12,6 +12,7 @@ import org.mapstruct.Named;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", uses = {PostMapper.class})
 public interface CampaignMapper {
@@ -23,6 +24,19 @@ public interface CampaignMapper {
     CampaignResponse toResponse(Campaign campaign);
     
     List<CampaignResponse> toResponseList(List<Campaign> campaigns);
+
+    default List<CampaignResponse> toResponseList(List<Campaign> campaigns, boolean isRecommended) {
+        if (campaigns == null) {
+            return null;
+        }
+        return campaigns.stream()
+                .map(c -> {
+                    CampaignResponse r = toResponse(c);
+                    r.setIsRecommended(isRecommended);
+                    return r;
+                })
+                .collect(Collectors.toList());
+    }
     
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

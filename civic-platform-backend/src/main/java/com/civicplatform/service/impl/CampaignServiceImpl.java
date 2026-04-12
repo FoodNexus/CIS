@@ -6,11 +6,14 @@ import com.civicplatform.entity.Campaign;
 import com.civicplatform.entity.CampaignVote;
 import com.civicplatform.entity.User;
 import com.civicplatform.enums.CampaignStatus;
+import com.civicplatform.enums.InteractionAction;
+import com.civicplatform.enums.InteractionEntityType;
 import com.civicplatform.mapper.CampaignMapper;
 import com.civicplatform.repository.CampaignRepository;
 import com.civicplatform.repository.CampaignVoteRepository;
 import com.civicplatform.repository.UserRepository;
 import com.civicplatform.service.CampaignService;
+import com.civicplatform.service.UserInteractionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,7 @@ public class CampaignServiceImpl implements CampaignService {
     private final UserRepository userRepository;
     private final CampaignVoteRepository campaignVoteRepository;
     private final CampaignMapper campaignMapper;
+    private final UserInteractionService userInteractionService;
 
     @Override
     @Transactional
@@ -160,6 +164,8 @@ public class CampaignServiceImpl implements CampaignService {
                 .build();
 
         campaignVoteRepository.save(vote);
+
+        userInteractionService.record(userId, InteractionEntityType.CAMPAIGN, campaignId, InteractionAction.VOTE);
 
         // Check if campaign reached 100 votes
         long voteCount = campaignVoteRepository.countByCampaignId(campaignId);

@@ -15,6 +15,8 @@ export interface DashboardStats {
   activeVolunteers?: number;
   activeDonors?: number;
   activeAssociations?: number;
+  /** ML FastAPI service: "online" | "offline" */
+  mlServiceStatus?: string;
 }
 
 export interface ImpactMetrics {
@@ -51,5 +53,13 @@ export class MetricsService {
   /** Admin-only: platform KPI / environmental snapshot PDF (not user lists — use Reports). */
   exportMetricsPdf(): Observable<Blob> {
     return this.http.get(`${this.API_URL}/pdf/metrics`, { responseType: 'blob' });
+  }
+
+  /** Admin: trigger Python ML model retraining. */
+  triggerMlRetrain(): Observable<{ status: string; message: string }> {
+    return this.http.post<{ status: string; message: string }>(
+      `${this.API_URL}/admin/ml/retrain`,
+      {}
+    );
   }
 }

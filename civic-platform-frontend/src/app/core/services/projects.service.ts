@@ -16,6 +16,8 @@ export interface Project {
   organizerType?: string;
   createdAt?: string;
   createdById?: number;
+  /** Present when returned from the ML recommendation feed. */
+  isRecommended?: boolean;
   fundingPercentage?: number;
   fullyFunded?: boolean;
 }

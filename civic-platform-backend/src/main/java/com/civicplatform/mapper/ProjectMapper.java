@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", uses = {ProjectFundingMapper.class})
 public interface ProjectMapper {
@@ -18,6 +19,19 @@ public interface ProjectMapper {
     ProjectResponse toResponse(Project project);
     
     List<ProjectResponse> toResponseList(List<Project> projects);
+
+    default List<ProjectResponse> toResponseList(List<Project> projects, boolean isRecommended) {
+        if (projects == null) {
+            return null;
+        }
+        return projects.stream()
+                .map(p -> {
+                    ProjectResponse r = toResponse(p);
+                    r.setIsRecommended(isRecommended);
+                    return r;
+                })
+                .collect(Collectors.toList());
+    }
     
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

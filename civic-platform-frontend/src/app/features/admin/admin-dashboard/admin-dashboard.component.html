@@ -75,8 +75,31 @@
       <section class="mb-8 sm:mb-10" aria-labelledby="section-key-metrics">
         <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.04]">
           <div class="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-5 py-4 sm:px-6 sm:py-5">
-            <h2 id="section-key-metrics" class="admin-dashboard__section-title text-base sm:text-lg">Key metrics</h2>
-            <p class="admin-dashboard__section-desc mt-1">Operational volume and reported impact — updated with dashboard stats</p>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 id="section-key-metrics" class="admin-dashboard__section-title text-base sm:text-lg">Key metrics</h2>
+                <p class="admin-dashboard__section-desc mt-1">Operational volume and reported impact — updated with dashboard stats</p>
+              </div>
+              <div class="flex flex-col items-stretch sm:items-end gap-2 shrink-0">
+                <div class="flex flex-wrap items-center gap-2 text-sm">
+                  <span *ngIf="stats?.mlServiceStatus === 'online'" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-emerald-900 ring-1 ring-emerald-200/80">
+                    <span aria-hidden="true">🟢</span> ML Service en ligne
+                  </span>
+                  <span *ngIf="stats?.mlServiceStatus === 'offline'" class="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1 text-red-900 ring-1 ring-red-200/80">
+                    <span aria-hidden="true">🔴</span> ML Service hors ligne
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  (click)="retrainMlModel()"
+                  [disabled]="mlRetrainPending"
+                  class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50">
+                  <span *ngIf="mlRetrainPending" class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true"></span>
+                  Réentraîner le modèle
+                </button>
+                <p *ngIf="mlRetrainMessage" class="text-xs text-slate-600 text-right">{{ mlRetrainMessage }}</p>
+              </div>
+            </div>
           </div>
 
           <div class="space-y-0 divide-y divide-slate-100">

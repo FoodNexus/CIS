@@ -6,7 +6,10 @@ import com.civicplatform.entity.User;
 import com.civicplatform.repository.LikeRepository;
 import com.civicplatform.repository.PostRepository;
 import com.civicplatform.repository.UserRepository;
+import com.civicplatform.enums.InteractionAction;
+import com.civicplatform.enums.InteractionEntityType;
 import com.civicplatform.service.LikeService;
+import com.civicplatform.service.UserInteractionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,7 @@ public class LikeServiceImpl implements LikeService {
     private final LikeRepository likeRepository;
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final UserInteractionService userInteractionService;
 
     @Override
     @Transactional
@@ -43,6 +47,8 @@ public class LikeServiceImpl implements LikeService {
         // Update post likes count
         post.setLikesCount(post.getLikesCount() + 1);
         postRepository.save(post);
+
+        userInteractionService.record(userId, InteractionEntityType.POST, postId, InteractionAction.LIKE);
     }
 
     @Override

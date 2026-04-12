@@ -15,7 +15,10 @@ import com.civicplatform.repository.ProjectFundingRepository;
 import com.civicplatform.repository.ProjectRepository;
 import com.civicplatform.repository.ProjectVoteRepository;
 import com.civicplatform.repository.UserRepository;
+import com.civicplatform.enums.InteractionAction;
+import com.civicplatform.enums.InteractionEntityType;
 import com.civicplatform.service.ProjectService;
+import com.civicplatform.service.UserInteractionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +38,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectVoteRepository projectVoteRepository;
     private final ProjectMapper projectMapper;
     private final ProjectFundingMapper projectFundingMapper;
+    private final UserInteractionService userInteractionService;
 
     @Override
     @Transactional
@@ -122,6 +126,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         project.vote();
         projectRepository.save(project);
+
+        userInteractionService.record(userId, InteractionEntityType.PROJECT, projectId, InteractionAction.VOTE);
     }
 
     @Override
@@ -161,6 +167,8 @@ public class ProjectServiceImpl implements ProjectService {
             project.setStatus("FULLY_FUNDED");
             projectRepository.save(project);
         }
+
+        userInteractionService.record(userId, InteractionEntityType.PROJECT, project.getId(), InteractionAction.FUND);
     }
 
     @Override

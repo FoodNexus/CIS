@@ -12,7 +12,10 @@ import com.civicplatform.repository.CommentAttachmentRepository;
 import com.civicplatform.repository.CommentRepository;
 import com.civicplatform.repository.PostRepository;
 import com.civicplatform.repository.UserRepository;
+import com.civicplatform.enums.InteractionAction;
+import com.civicplatform.enums.InteractionEntityType;
 import com.civicplatform.service.CommentService;
+import com.civicplatform.service.UserInteractionService;
 import com.civicplatform.service.PostMediaStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,6 +40,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentMapper commentMapper;
     private final CommentAttachmentRepository commentAttachmentRepository;
     private final PostMediaStorageService postMediaStorageService;
+    private final UserInteractionService userInteractionService;
 
     @Override
     @Transactional
@@ -52,6 +56,7 @@ public class CommentServiceImpl implements CommentService {
         comment.setPost(post);
 
         comment = commentRepository.save(comment);
+        userInteractionService.record(authorId, InteractionEntityType.POST, post.getId(), InteractionAction.COMMENT);
         CommentResponse r = commentMapper.toResponse(comment);
         r.setAttachments(List.of());
         return r;
@@ -80,6 +85,7 @@ public class CommentServiceImpl implements CommentService {
                 .post(post)
                 .build();
         comment = commentRepository.save(comment);
+        userInteractionService.record(authorId, InteractionEntityType.POST, postId, InteractionAction.COMMENT);
 
         for (MultipartFile file : fileList) {
             if (file == null || file.isEmpty()) {

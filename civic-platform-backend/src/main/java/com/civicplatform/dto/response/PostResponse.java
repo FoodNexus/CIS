@@ -25,6 +25,8 @@ public class PostResponse {
     private LocalDateTime createdAt;
     private Long campaignId;
     private String campaignName;
+    /** Set when this post is returned from the ML recommendation feed. */
+    private Boolean isRecommended;
     private List<CommentResponse> comments;
     private List<MediaAttachmentDto> attachments;
 }

@@ -1,7 +1,7 @@
 # If spring-boot:run fails with "Port 8081 was already in use", stop the other process
 # (e.g. ./run-dev.sh) or: fuser -k 8081/tcp
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
   servlet:
     context-path: /api
 
@@ -57,6 +57,11 @@ app:
     profile-dir: ${user.home}/.civic-platform/uploads/profile
     post-media-dir: ${user.home}/.civic-platform/uploads/post-media
     comment-media-dir: ${user.home}/.civic-platform/uploads/comment-media
+
+ml:
+  service:
+    url: ${ML_SERVICE_URL:http://localhost:8000}
+    timeout-seconds: ${ML_SERVICE_TIMEOUT_SECONDS:10}
 
 # JWT Configuration
 jwt:

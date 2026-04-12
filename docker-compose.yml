@@ -1,0 +1,76 @@
+services:
+
+  mariadb:
+    image: mariadb:10.11
+    container_name: civic-mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: civic_platform
+      MYSQL_USER: civic_user
+      MYSQL_PASSWORD: civic_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./civic-platform-backend
+      dockerfile: Dockerfile
+    container_name: civic-backend
+    restart: always
+    # Host 8081 matches civic-platform-frontend environment.ts (apiUrl .../8081/api)
+    ports:
+      - "8081:8080"
+    environment:
+      SERVER_PORT: "8080"
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/civic_platform
+      SPRING_DATASOURCE_USERNAME: civic_user
+      SPRING_DATASOURCE_PASSWORD: civic_password
+      ML_SERVICE_URL: http://ml-service:8000
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_here_min_32_chars________________}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-smtp.gmail.com}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-your@email.com}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-your_app_password}
+      DB_PASSWORD: civic_password
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: civic-ml
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: "3306"
+      DB_NAME: civic_platform
+      DB_USER: civic_user
+      DB_PASSWORD: civic_password
+      MODEL_PATH: /app/models/svd_model.pkl
+      RETRAIN_INTERVAL_HOURS: "24"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    volumes:
+      - ml_models:/app/models
+
+volumes:
+  mariadb_data:
+  ml_models:

@@ -25,4 +25,6 @@ public class DashboardStatsResponse {
     private Long activeVolunteers;
     private Long activeDonors;
     private Long activeAssociations;
+    /** "online" or "offline" — Python ML recommendation service reachability. */
+    private String mlServiceStatus;
 }

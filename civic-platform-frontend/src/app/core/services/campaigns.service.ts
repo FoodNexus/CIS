@@ -32,6 +32,8 @@ export interface Campaign {
   currentMeals?: number;
   hashtag?: string;
   voteCount: number;
+  /** Present when returned from the ML recommendation feed. */
+  isRecommended?: boolean;
   createdAt?: string;
   createdById?: number;
   createdByName?: string;

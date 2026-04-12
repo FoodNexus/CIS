@@ -9,6 +9,7 @@ import com.civicplatform.repository.ProjectFundingRepository;
 import com.civicplatform.repository.ProjectRepository;
 import com.civicplatform.repository.UserRepository;
 import com.civicplatform.service.DashboardService;
+import com.civicplatform.service.MlServiceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final ProjectRepository projectRepository;
     private final ProjectFundingRepository projectFundingRepository;
     private final ImpactMetricsRepository impactMetricsRepository;
+    private final MlServiceClient mlServiceClient;
 
     @Override
     public DashboardStatsResponse getDashboardStats() {
@@ -67,6 +69,8 @@ public class DashboardServiceImpl implements DashboardService {
         Long activeDonors = userRepository.countByUserType(UserType.DONOR);
         Long activeAssociations = userRepository.countByUserType(UserType.DONOR);
 
+        boolean mlOk = mlServiceClient.isHealthy();
+
         return DashboardStatsResponse.builder()
                 .totalUsersByType(totalUsersByType)
                 .totalCampaignsByStatus(totalCampaignsByStatus)
@@ -79,6 +83,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .activeVolunteers(activeVolunteers)
                 .activeDonors(activeDonors)
                 .activeAssociations(activeAssociations)
+                .mlServiceStatus(mlOk ? "online" : "offline")
                 .build();
     }
 }
