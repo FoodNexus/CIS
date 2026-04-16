@@ -15,9 +15,13 @@ import com.civicplatform.mapper.EventParticipantMapper;
 import com.civicplatform.repository.EventParticipantRepository;
 import com.civicplatform.repository.EventRepository;
 import com.civicplatform.repository.UserRepository;
+import com.civicplatform.enums.InteractionAction;
+import com.civicplatform.enums.InteractionEntityType;
+import com.civicplatform.service.EventInvitationMatchingAsyncRunner;
 import com.civicplatform.service.EventLifecycleService;
 import com.civicplatform.service.EventService;
 import com.civicplatform.service.PromotionService;
+import com.civicplatform.service.UserInteractionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +41,8 @@ public class EventServiceImpl implements EventService {
     private final EventParticipantMapper eventParticipantMapper;
     private final PromotionService promotionService;
     private final EventLifecycleService eventLifecycleService;
+    private final EventInvitationMatchingAsyncRunner eventInvitationMatchingAsyncRunner;
+    private final UserInteractionService userInteractionService;
 
     @Override
     @Transactional
@@ -48,6 +54,7 @@ public class EventServiceImpl implements EventService {
         event.setOrganizerId(organizerId);
 
         event = eventRepository.save(event);
+        eventInvitationMatchingAsyncRunner.triggerMatchingAfterEventCreated(event.getId());
         return eventMapper.toResponse(event);
     }
 
@@ -220,6 +227,8 @@ public class EventServiceImpl implements EventService {
         // Update event participant count
         event.incrementParticipants();
         eventRepository.save(event);
+
+        userInteractionService.record(userId, InteractionEntityType.EVENT, eventId, InteractionAction.ATTEND);
     }
 
     @Override

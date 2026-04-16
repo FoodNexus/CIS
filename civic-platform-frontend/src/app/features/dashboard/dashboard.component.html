@@ -94,21 +94,90 @@
   <!-- Dashboard tab panels (role-specific tabs from getTabs()) -->
   <div *ngIf="!isLoading && !error" class="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
 
+    <div *ngIf="inviteToast" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+      {{ inviteToast }}
+      <button type="button" class="ml-2 font-semibold underline" (click)="inviteToast = null">OK</button>
+    </div>
+
+    <!-- My invitations (citizen / participant / ambassador) -->
+    <div *ngIf="isActiveTab('invitations') && (isCitizen() || isParticipant() || isAmbassador())" class="space-y-6">
+      <h2 class="text-2xl font-bold text-gray-900">My invitations</h2>
+      <p *ngIf="myInvitations.length === 0" class="text-gray-500 text-sm py-8 text-center rounded-xl border border-dashed border-gray-200 bg-white">
+        📬 You have no invitations yet.
+      </p>
+      <div class="grid gap-4 md:grid-cols-2">
+        <div
+          *ngFor="let inv of myInvitations"
+          class="rounded-xl border border-emerald-100 bg-white p-5 shadow-sm"
+        >
+          <p class="text-lg font-semibold text-gray-900">📋 {{ inv.eventTitle }}</p>
+          <p class="text-sm text-gray-600 mt-1">
+            Organized by: <span class="font-medium">{{ inv.donorAssociationName || '—' }}</span>
+          </p>
+          <div class="mt-4">
+            <p *ngIf="inv.invitationTier" class="text-xs font-semibold text-violet-800 mb-1">
+              {{ invitationTierLabel(inv.invitationTier) }}
+              <span *ngIf="inv.priorityFollowup" class="text-violet-600"> · Priority follow-up</span>
+            </p>
+            <p class="text-sm text-gray-700">
+              Composite rate: {{ inv.compositeRate != null ? (inv.compositeRate | number:'1.1-1') : (inv.matchScore | number:'1.0-0') }} / {{ inv.compositeRate != null ? 100 : '—' }}
+            </p>
+            <div class="flex items-center gap-2 mt-2">
+              <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  class="h-2 rounded-full transition-all"
+                  [ngClass]="invitationScoreBarClass(inv.matchScorePercent)"
+                  [style.width.%]="inv.matchScorePercent"
+                ></div>
+              </div>
+              <span class="text-xs text-gray-500 w-12">{{ inv.matchScorePercent | number:'1.0-1' }}%</span>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-3">
+            Invited on: {{ inv.invitedAt | date:'mediumDate' }}
+          </p>
+          <p class="text-sm mt-2">
+            <span class="font-medium text-gray-700">Status:</span>
+            <span *ngIf="inv.status === 'INVITED'" class="text-blue-700">⏳ Pending</span>
+            <span *ngIf="inv.status === 'ACCEPTED'" class="text-emerald-700">✅ Accepted</span>
+            <span *ngIf="inv.status === 'DECLINED'" class="text-red-700">❌ Declined</span>
+            <span *ngIf="inv.status === 'NO_RESPONSE'" class="text-gray-600">⏳ —</span>
+          </p>
+          <div *ngIf="inv.status === 'INVITED' && inv.invitationToken" class="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              (click)="respondInvitation(inv, 'ACCEPTED')"
+              class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700"
+            >
+              ✅ Accept
+            </button>
+            <button
+              type="button"
+              (click)="respondInvitation(inv, 'DECLINED')"
+              class="px-4 py-2 rounded-lg text-sm font-semibold border border-red-300 text-red-700 hover:bg-red-50"
+            >
+              ❌ Decline
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Campaigns tab: CITIZEN / PARTICIPANT — discovery -->
     <div *ngIf="isActiveTab('campaigns') && (isCitizen() || isParticipant())" class="space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <h2 class="text-2xl font-bold text-gray-900">Community campaigns</h2>
         <p *ngIf="feedColdStart !== undefined || isMeaningfulModelVersion(feedModelVersion)" class="text-xs text-gray-500">
-          <span *ngIf="feedColdStart === true" class="rounded-full bg-amber-50 text-amber-900 px-2 py-0.5 font-medium">Découverte</span>
-          <span *ngIf="feedColdStart === false" class="rounded-full bg-emerald-50 text-emerald-900 px-2 py-0.5 font-medium">Recommandé pour vous</span>
-          <span *ngIf="isMeaningfulModelVersion(feedModelVersion)" class="ml-1">modèle {{ feedModelVersion }}</span>
+          <span *ngIf="feedColdStart === true" class="rounded-full bg-amber-50 text-amber-900 px-2 py-0.5 font-medium">Discovery</span>
+          <span *ngIf="feedColdStart === false" class="rounded-full bg-emerald-50 text-emerald-900 px-2 py-0.5 font-medium">Recommended for you</span>
+          <span *ngIf="isMeaningfulModelVersion(feedModelVersion)" class="ml-1">model {{ feedModelVersion }}</span>
         </p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div *ngFor="let campaign of feedCampaigns | slice:0:9" class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border border-gray-100 p-5">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
             <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded">{{ campaign.type }}</span>
-            <span *ngIf="campaign.isRecommended" class="text-[0.65rem] font-bold uppercase text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">Pour vous</span>
+            <span *ngIf="campaign.isRecommended" class="text-[0.65rem] font-bold uppercase text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">For you</span>
             <span class="text-xs text-gray-400 ml-auto">{{ campaign.startDate | date:'mediumDate' }}</span>
           </div>
           <h4 class="font-semibold text-gray-900">{{ campaign.name }}</h4>
@@ -117,12 +186,12 @@
         </div>
       </div>
       <div *ngIf="feedPosts.length > 0" class="space-y-3 pt-2">
-        <h3 class="text-lg font-semibold text-gray-900">Publications suggérées</h3>
+        <h3 class="text-lg font-semibold text-gray-900">Suggested posts</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div *ngFor="let post of feedPosts | slice:0:6" class="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
             <span class="text-[0.65rem] font-bold uppercase text-gray-500">{{ post.type }}</span>
             <p class="text-sm text-gray-800 mt-2 line-clamp-3">{{ post.content || '(media)' }}</p>
-            <a [routerLink]="['/posts', post.id]" class="mt-2 inline-block text-sm text-emerald-600">Voir →</a>
+            <a [routerLink]="['/posts', post.id]" class="mt-2 inline-block text-sm text-emerald-600">View →</a>
           </div>
         </div>
       </div>
@@ -311,10 +380,20 @@
     <!-- Events tab: CITIZEN / PARTICIPANT -->
     <div *ngIf="isActiveTab('events') && (isCitizen() || isParticipant())" class="space-y-10">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Upcoming events</h2>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <h2 class="text-2xl font-bold text-gray-900">Upcoming events</h2>
+          <p *ngIf="shouldUseMlFeed() && (feedColdStart !== undefined || isMeaningfulModelVersion(feedModelVersion))" class="text-xs text-gray-500">
+            <span *ngIf="feedColdStart === true" class="rounded-full bg-amber-50 text-amber-900 px-2 py-0.5 font-medium">Discovery</span>
+            <span *ngIf="feedColdStart === false" class="rounded-full bg-emerald-50 text-emerald-900 px-2 py-0.5 font-medium">Recommended for you</span>
+            <span *ngIf="isMeaningfulModelVersion(feedModelVersion)" class="ml-1">model {{ feedModelVersion }}</span>
+          </p>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
           <div *ngFor="let event of feedEvents | slice:0:9" class="bg-white rounded-xl shadow-md border border-gray-100 p-5">
-            <span [class]="getEventStatusColor(event.status) + ' text-xs px-2 py-1 rounded'">{{ event.status }}</span>
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <span [class]="getEventStatusColor(event.status) + ' text-xs px-2 py-1 rounded'">{{ event.status }}</span>
+              <span *ngIf="event.isRecommended" class="text-[0.65rem] font-bold uppercase text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">For you</span>
+            </div>
             <h4 class="font-semibold text-gray-900 mt-2">{{ event.title }}</h4>
             <p class="text-sm text-gray-500 mt-1">{{ event.date | date:'mediumDate' }}</p>
             <a [routerLink]="['/events', event.id]" class="mt-3 text-sm text-emerald-600 font-medium">View event →</a>
@@ -346,7 +425,7 @@
           <div *ngFor="let project of feedProjects | slice:0:9" class="bg-white rounded-xl border border-gray-100 p-5">
             <div class="flex items-start justify-between gap-2 mb-1">
               <h4 class="font-semibold text-gray-900">{{ project.title }}</h4>
-              <span *ngIf="project.isRecommended" class="shrink-0 text-[0.65rem] font-bold uppercase text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">Pour vous</span>
+              <span *ngIf="project.isRecommended" class="shrink-0 text-[0.65rem] font-bold uppercase text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded">For you</span>
             </div>
             <p class="text-sm text-gray-500 mt-2">{{ getProjectProgress(project) }}% funded</p>
             <a [routerLink]="['/projects', project.id]" class="mt-3 text-sm text-emerald-600">View project →</a>

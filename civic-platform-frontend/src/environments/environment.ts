@@ -1,7 +1,23 @@
+function resolveApiBaseUrl(): string {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const o = localStorage.getItem('api_base_url');
+      if (o?.trim()) {
+        return o.trim().replace(/\/$/, '');
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return 'http://localhost:8082/api';
+}
+
 export const environment = {
   production: false,
-  /** Local `mvn spring-boot:run` default (see application.yml). Docker stack uses nginx /api on :4200. */
-  apiUrl: 'http://localhost:8082/api',
+  /** Spring Boot with `server.servlet.context-path=/api`. Getter so `api_base_url` in localStorage applies app-wide after reload. */
+  get apiUrl(): string {
+    return resolveApiBaseUrl();
+  },
   /** Optional: https://developers.giphy.com/dashboard/ — enables GIF search in post/comment composer */
   giphyApiKey: ''
 };

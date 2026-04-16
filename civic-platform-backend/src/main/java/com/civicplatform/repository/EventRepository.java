@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -27,6 +28,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     
     @Query("SELECT e FROM Event e WHERE e.date >= :now ORDER BY e.date ASC")
     List<Event> findUpcomingEvents(LocalDateTime now);
+
+    @Query("SELECT e FROM Event e WHERE e.date >= :now AND e.status = 'UPCOMING' AND e.id <> :excludeId ORDER BY e.date ASC")
+    List<Event> findUpcomingExcluding(@Param("now") LocalDateTime now, @Param("excludeId") Long excludeId);
     
     @Query("SELECT e FROM Event e WHERE e.date <= :now AND e.status = 'UPCOMING'")
     List<Event> findEventsThatShouldStart(LocalDateTime now);

@@ -294,6 +294,54 @@ class RecommendationModel:
         seen: set = set()
         return [x for x in out if not (x in seen or seen.add(x))]
 
+    def recommend_events(
+        self,
+        user_id: int,
+        events_df: pd.DataFrame,
+        user_registrations_df: pd.DataFrame,
+        limit: int = 9,
+        is_cold_start: bool = False,
+    ) -> List[int]:
+
+        if events_df.empty:
+            return []
+
+        limit = self._clip_limit(limit, 9)
+
+        already_in = set(
+            user_registrations_df[user_registrations_df["user_id"] == user_id]["event_id"]
+            .tolist()
+        )
+
+        scores = []
+        now = datetime.now()
+
+        for _, row in events_df.iterrows():
+            eid = int(row["id"])
+            if eid in already_in:
+                continue
+
+            cap = float(row.get("max_capacity", 1) or 1)
+            cur = float(row.get("current_participants", 0) or 0)
+            fullness = cur / cap if cap > 0 else 0
+
+            if is_cold_start:
+                score = float(np.log1p(cur) * 2.0) + (1.0 - fullness) * 3.0
+            else:
+                svd_score = self.predict_score(user_id, "EVENT", eid)
+                popularity = float(np.log1p(cur))
+                event_date = pd.to_datetime(row.get("date", now))
+                days_until = (event_date.to_pydatetime() - now).days
+                urgency = max(0, min(14, 14 - max(0, days_until))) * 0.2
+                score = (svd_score * 3.0) + popularity + urgency + (1.0 - fullness) * 2.0
+
+            scores.append((eid, score))
+
+        scores.sort(key=lambda x: x[1], reverse=True)
+        out = [eid for eid, _ in scores[:limit]]
+        seen: set = set()
+        return [x for x in out if not (x in seen or seen.add(x))]
+
 
 # Singleton instance
 recommendation_model = RecommendationModel()

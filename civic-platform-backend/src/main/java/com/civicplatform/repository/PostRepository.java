@@ -29,4 +29,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     
     @Query("SELECT COUNT(p) FROM Post p WHERE p.status = :status")
     long countByStatus(PostStatus status);
+
+    long countByCreatorAndType(String creator, PostType type);
 }

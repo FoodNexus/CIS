@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/comments/*/attachments/*").permitAll()
                 .requestMatchers("/users/*/qrcode").authenticated()
                 .requestMatchers("/events/*/attendance/*/certificate/pdf").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/event-invitations/respond").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

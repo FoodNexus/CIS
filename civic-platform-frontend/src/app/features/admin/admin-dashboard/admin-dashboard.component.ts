@@ -139,7 +139,7 @@ export class AdminDashboardComponent implements OnInit {
     this.metricsService.triggerMlRetrain().subscribe({
       next: () => {
         this.mlRetrainPending = false;
-        this.mlRetrainMessage = 'Réentraînement accepté.';
+        this.mlRetrainMessage = 'Retraining accepted.';
       },
       error: () => {
         this.mlRetrainPending = false;

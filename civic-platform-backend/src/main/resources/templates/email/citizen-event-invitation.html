@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="'Invitation — ' + ${eventTitle}">Invitation</title>
+</head>
+<body style="margin:0;padding:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f1f5f9;color:#0f172a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(15,23,42,.08);">
+          <tr>
+            <td style="background:#2563EB;color:#ffffff;padding:16px 20px;font-weight:700;font-size:16px;">
+              Civic Engagement Platform
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 24px 8px;">
+              <p style="margin:0 0 16px;font-size:16px;line-height:1.5;">
+                Hello <span th:text="${citizenFirstName}">Name</span>,
+              </p>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                Your profile was selected among the best matches for this community event:
+              </p>
+              <div style="border:1px solid #e2e8f0;border-radius:10px;padding:16px;background:#f8fafc;">
+                <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Title</p>
+                <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#0f172a;" th:text="${eventTitle}">Title</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Description</p>
+                <p style="margin:0 0 16px;font-size:14px;line-height:1.5;color:#334155;" th:text="${eventDescription}">Description</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Type</p>
+                <p style="margin:0 0 16px;font-size:15px;font-weight:600;" th:text="${eventType}">TYPE</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Organized by</p>
+                <p style="margin:0 0 16px;font-size:15px;font-weight:600;" th:text="${donorName}">Organizer</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Date</p>
+                <p style="margin:0 0 8px;font-size:15px;" th:text="${eventDate != null ? #temporals.format(eventDate, 'MMMM d, yyyy h:mm a') : '—'}">—</p>
+                <p style="margin:8px 0 0;font-size:14px;color:#64748b;">Location</p>
+                <p style="margin:0;font-size:15px;" th:text="${eventLocation}">—</p>
+              </div>
+              <div style="margin-top:20px;padding:16px;background:#eff6ff;border-radius:10px;">
+                <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#1e40af;">
+                  Composite match rate: <span th:text="${#numbers.formatDecimal(matchPercent, 0, 'COMMA', 1, 'POINT')}">0</span> / 100
+                </p>
+                <div style="height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;">
+                  <div th:style="'height:10px;background:#2563EB;width:' + ${matchPercent} + '%;border-radius:999px;'"></div>
+                </div>
+              </div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:24px;">
+                <tr>
+                  <td align="center" style="padding:8px;">
+                    <a th:href="${acceptUrl}"
+                       style="display:inline-block;padding:12px 24px;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">
+                      Accept
+                    </a>
+                  </td>
+                  <td align="center" style="padding:8px;">
+                    <a th:href="${declineUrl}"
+                       style="display:inline-block;padding:12px 24px;background:#ffffff;color:#dc2626;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;border:2px solid #dc2626;">
+                      Decline
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:24px 0 0;font-size:12px;line-height:1.5;color:#64748b;">
+                You received this email because your profile matches this event. No action is required if you prefer not to participate.
+              </p>
+              <p style="margin:12px 0 0;font-size:12px;color:#94a3b8;">
+                Civic Engagement Platform — <span th:text="${emailDate}">date</span>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

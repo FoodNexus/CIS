@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
+import { EventInvitationService } from '@core/services/event-invitation.service';
+import { EventInvitation } from '@core/models/event-invitation.model';
 import { EventsService, Event, EventStatus } from '@core/services/events.service';
 
 @Component({
@@ -28,11 +30,19 @@ export class EventDetailComponent implements OnInit {
   showDeleteModal = false;
   deleteLoading = false;
 
+  /** Organizer: view automatically matched invitees */
+  eventTab: 'details' | 'invitations' = 'details';
+  invitations: EventInvitation[] = [];
+  invitationsLoading = false;
+  invitationsError = '';
+  rematchLoading = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private eventsService: EventsService,
-    private authService: AuthService
+    private authService: AuthService,
+    private eventInvitationService: EventInvitationService
   ) {}
 
   isAdminRoute(): boolean {
@@ -110,6 +120,9 @@ export class EventDetailComponent implements OnInit {
         } else {
           this.isRegistered = false;
           this.registrationStatus = null;
+        }
+        if (this.isOrganizer() && this.eventTab === 'invitations') {
+          this.loadInvitations(id);
         }
       },
       error: (error) => {
@@ -202,5 +215,78 @@ export class EventDetailComponent implements OnInit {
     if (this.registrationStatus === 'REGISTERED') return 'Registered';
     if (this.registrationStatus === 'CHECKED_IN') return 'Checked in';
     return this.registrationStatus.replace(/_/g, ' ');
+  }
+
+  setEventTab(tab: 'details' | 'invitations'): void {
+    this.eventTab = tab;
+    if (tab === 'invitations' && this.event?.id) {
+      this.loadInvitations(this.event.id);
+    }
+  }
+
+  loadInvitations(eventId: number): void {
+    this.invitationsLoading = true;
+    this.invitationsError = '';
+    this.eventInvitationService.getEventInvitations(eventId).subscribe({
+      next: (rows) => {
+        this.invitations = rows;
+        this.invitationsLoading = false;
+      },
+      error: (err: { status?: number; error?: { message?: string } }) => {
+        this.invitationsError =
+          err.status === 403
+            ? 'Access denied.'
+            : err.error?.message || 'Could not load invitations.';
+        this.invitationsLoading = false;
+      }
+    });
+  }
+
+  runRematch(): void {
+    if (!this.event?.id) {
+      return;
+    }
+    this.rematchLoading = true;
+    this.invitationsError = '';
+    this.eventInvitationService.triggerRematch(this.event.id).subscribe({
+      next: (rows) => {
+        this.invitations = rows;
+        this.rematchLoading = false;
+      },
+      error: () => {
+        this.rematchLoading = false;
+        this.invitationsError = 'Could not run matching again.';
+      }
+    });
+  }
+
+  invitationScoreLabel(m: EventInvitation): string {
+    if (m.compositeRate != null && m.compositeRate !== undefined) {
+      return `${m.compositeRate.toFixed(1)} / 100`;
+    }
+    return `${Math.round(m.matchScore)} pts`;
+  }
+
+  scoreBarClass(percent: number): string {
+    if (percent <= 40) {
+      return 'bg-red-500';
+    }
+    if (percent <= 70) {
+      return 'bg-amber-500';
+    }
+    return 'bg-emerald-500';
+  }
+
+  invitationStatusClass(status: string): string {
+    switch (status) {
+      case 'INVITED':
+        return 'bg-blue-100 text-blue-800 border border-blue-200';
+      case 'ACCEPTED':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'DECLINED':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
   }
 }

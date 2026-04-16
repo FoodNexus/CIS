@@ -32,6 +32,8 @@ export interface Event {
   createdAt?: string;
   availableSpots?: number;
   capacityPercentage?: number;
+  /** Set when returned from the ML recommendation feed. */
+  isRecommended?: boolean;
 }
 
 export interface EventRegistrationStatus {

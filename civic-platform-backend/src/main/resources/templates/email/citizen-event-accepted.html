@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title th:text="'Invitation accepted — ' + ${eventTitle}">Invitation accepted</title>
+</head>
+<body style="margin:0;padding:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f1f5f9;color:#0f172a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(15,23,42,.08);">
+          <tr>
+            <td style="padding:24px;">
+              <p style="margin:0 0 12px;font-size:16px;">
+                Hello <span th:text="${donorFirstName}">Organizer</span>,
+              </p>
+              <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#334155;">
+                Good news: <strong th:text="${citizenFullName}">Citizen</strong> accepted your invitation for
+                <strong th:text="${eventTitle}">Event</strong>.
+              </p>
+              <div style="border:1px solid #e2e8f0;border-radius:10px;padding:16px;background:#f8fafc;">
+                <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Name</p>
+                <p style="margin:0 0 16px;font-size:16px;font-weight:700;" th:text="${citizenFullName}">Name</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Badge</p>
+                <p style="margin:0 0 16px;font-size:15px;font-weight:600;color:#2563EB;" th:text="${badge}">GOLD</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Events attended</p>
+                <p style="margin:0 0 16px;font-size:15px;" th:text="${eventsAttended}">0</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Match score</p>
+                <p style="margin:0;font-size:15px;font-weight:600;" th:text="${#numbers.formatDecimal(matchScore, 0, 'COMMA', 1, 'POINT')} + ' / 100'">0 / 100</p>
+              </div>
+              <div style="margin-top:24px;text-align:center;">
+                <a th:href="${frontendUrl} + '/events/' + ${eventId}"
+                   style="display:inline-block;padding:12px 24px;background:#2563EB;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">
+                  View event
+                </a>
+              </div>
+              <p style="margin:24px 0 0;font-size:12px;color:#94a3b8;">
+                Civic Engagement Platform — <span th:text="${emailDate}">date</span>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

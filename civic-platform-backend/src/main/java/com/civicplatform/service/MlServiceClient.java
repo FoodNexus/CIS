@@ -33,14 +33,18 @@ public class MlServiceClient {
         String url = mlServiceUrl + "/recommend";
         MlRecommendRequest request = new MlRecommendRequest();
         request.setUserId(userId);
-        request.setLimitCampaigns(5);
-        request.setLimitProjects(5);
-        request.setLimitPosts(10);
+        request.setLimitCampaigns(0);
+        request.setLimitProjects(0);
+        request.setLimitPosts(0);
+        request.setLimitEvents(9);
 
         try {
             ResponseEntity<MlRecommendResponse> response =
                     restTemplate.postForEntity(url, request, MlRecommendResponse.class);
             MlRecommendResponse body = response.getBody();
+            if (body != null && body.getRecommendedEventIds() == null) {
+                body.setRecommendedEventIds(new java.util.ArrayList<>());
+            }
             return body != null ? body : MlRecommendResponse.empty(userId);
         } catch (Exception e) {
             log.warn("ML service unavailable: {}. Using empty recommendations.", e.getMessage());

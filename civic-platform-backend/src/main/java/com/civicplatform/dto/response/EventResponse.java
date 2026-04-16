@@ -28,6 +28,8 @@ public class EventResponse {
     private String organizerName;
     private EventStatus status;
     private LocalDateTime createdAt;
+    /** Set when this event is returned from the ML recommendation feed. */
+    private Boolean isRecommended;
     private List<EventParticipantResponse> participants;
     
     // Helper methods

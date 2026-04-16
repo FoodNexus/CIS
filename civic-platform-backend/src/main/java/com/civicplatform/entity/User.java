@@ -77,6 +77,10 @@ public class User implements UserDetails {
     private String contactEmail;
     private String address;
 
+    /** Comma-separated interest tags for matching (e.g. environment, technology). */
+    @Column(columnDefinition = "TEXT")
+    private String interests;
+
     private String firstName;
     private String lastName;
     private String phone;

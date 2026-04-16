@@ -100,7 +100,7 @@
         </div>
 
         <!-- Donate Button -->
-        <button (click)="openDonateModal()"
+        <button *ngIf="!isProjectCreator()" (click)="openDonateModal()"
                 class="w-full flex items-center justify-center gap-2 py-4 px-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg rounded-xl shadow-lg hover:from-green-600 hover:to-emerald-700 active:scale-[0.98] transition-all">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

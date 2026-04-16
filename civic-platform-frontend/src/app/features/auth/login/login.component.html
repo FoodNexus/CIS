@@ -50,7 +50,7 @@
             >
             <div *ngIf="email?.invalid && email?.touched" class="mt-2 text-sm text-red-600">
               <span *ngIf="email?.errors?.['required']">Email is required</span>
-              <span *ngIf="email?.errors?.['email']">Please enter a valid email</span>
+              <span *ngIf="email?.errors?.['pattern']">Please enter a valid email (e.g. name&#64;example.com)</span>
             </div>
           </div>
         </div>

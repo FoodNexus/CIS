@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { finalize } from 'rxjs';
@@ -13,6 +13,8 @@ import { PostsService, Post } from '@core/services/posts.service';
 import { User, UserType } from '@core/models/auth.models';
 import { FeedResponse } from '@core/models/feed.model';
 import { RecommendationsService } from '@core/services/recommendations.service';
+import { EventInvitationService } from '@core/services/event-invitation.service';
+import { EventInvitation } from '@core/models/event-invitation.model';
 import { isMeaningfulModelVersion } from '@core/utils/ml-display';
 
 interface DashboardTab {
@@ -48,11 +50,12 @@ export class DashboardComponent implements OnInit {
     volunteering: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
     profile: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
     settings: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z',
-    posts: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+    posts: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+    invitations: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
   };
 
-  // Active tab
-  activeTab = 'campaigns';
+  // Active tab — events-first (invitations / volunteering use other tab ids)
+  activeTab = 'events';
 
   // Loading states
   isLoading = true;
@@ -86,6 +89,10 @@ export class DashboardComponent implements OnInit {
   // Funding history
   myFundingHistory: FundingHistory[] = [];
 
+  /** Event invitations for citizens (citizen / participant / ambassador) */
+  myInvitations: EventInvitation[] = [];
+  inviteToast: string | null = null;
+
   // Badge progress
   eventsAttended = 0;
 
@@ -100,28 +107,37 @@ export class DashboardComponent implements OnInit {
     private eventsService: EventsService,
     private projectsService: ProjectsService,
     private postsService: PostsService,
-    private recommendationsService: RecommendationsService
+    private recommendationsService: RecommendationsService,
+    private eventInvitationService: EventInvitationService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
+    if (this.route.snapshot.queryParamMap.get('tab') === 'invitations') {
+      this.activeTab = 'invitations';
+    }
+    this.route.queryParamMap.subscribe((params) => {
+      if (params.get('tab') === 'invitations') {
+        this.activeTab = 'invitations';
+      }
+    });
     this.setDefaultTab();
     this.loadAllData();
   }
 
   setDefaultTab(): void {
-    const t = this.currentUser?.userType;
-    if (t === UserType.AMBASSADOR) {
-      this.activeTab = 'events';
+    if (this.activeTab === 'invitations') {
       return;
     }
-    this.activeTab = 'campaigns';
+    this.activeTab = 'events';
   }
 
   getWelcomeSubtitle(): string {
     switch (this.currentUser?.userType) {
       case UserType.DONOR:
-        return 'Support and launch community initiatives';
+        return 'Create events and reach local citizens';
       case UserType.AMBASSADOR:
         return 'Mobilize and engage your community';
       case UserType.CITIZEN:
@@ -144,6 +160,19 @@ export class DashboardComponent implements OnInit {
     return true;
   }
 
+  /** Event invitations: non-donor regular users (citizen, participant, ambassador). */
+  shouldLoadEventInvitations(): boolean {
+    const u = this.currentUser;
+    if (!u || u.isAdmin) {
+      return false;
+    }
+    return (
+      u.userType === UserType.CITIZEN ||
+      u.userType === UserType.PARTICIPANT ||
+      u.userType === UserType.AMBASSADOR
+    );
+  }
+
   loadAllData(): void {
     this.isLoading = true;
     this.error = null;
@@ -159,6 +188,9 @@ export class DashboardComponent implements OnInit {
     if (this.shouldUseMlFeed()) {
       requests.push(this.recommendationsService.getFeed().pipe(catchError(() => of(null))));
     }
+    if (this.shouldLoadEventInvitations()) {
+      requests.push(this.eventInvitationService.getMyInvitations().pipe(catchError(() => of([]))));
+    }
 
     forkJoin(requests).subscribe({
       next: (results: any[]) => {
@@ -166,18 +198,26 @@ export class DashboardComponent implements OnInit {
         const allEvents: Event[] = results[1] || [];
         const allProjects: Project[] = results[2] || [];
         const allPosts: Post[] = results[3] || [];
-        const feed: FeedResponse | null =
-          this.shouldUseMlFeed() && results.length > 6 ? results[6] : null;
+        let idx = 6;
+        const feed: FeedResponse | null = this.shouldUseMlFeed()
+          ? (results[idx++] as FeedResponse | null)
+          : null;
+        this.myInvitations = this.shouldLoadEventInvitations()
+          ? (results[idx] as EventInvitation[]) || []
+          : [];
         const uid = this.currentUser?.id;
 
         this.feedEvents = allEvents;
 
         if (feed) {
-          this.feedCampaigns = feed.campaigns?.length ? feed.campaigns : allCampaigns;
-          this.feedProjects = feed.projects?.length ? feed.projects : allProjects;
-          this.feedPosts = feed.posts || [];
+          this.feedCampaigns = feed.campaigns ?? [];
+          this.feedProjects = feed.projects ?? [];
+          this.feedPosts = feed.posts ?? [];
           this.feedModelVersion = feed.modelVersion;
           this.feedColdStart = feed.coldStart;
+          if (feed.events?.length) {
+            this.feedEvents = feed.events;
+          }
         } else {
           this.feedCampaigns = allCampaigns;
           this.feedProjects = allProjects;
@@ -287,11 +327,14 @@ export class DashboardComponent implements OnInit {
     const t = this.currentUser?.userType;
     const profile: DashboardTab = { id: 'profile', label: 'Profile', icon: this.tabIcons.profile };
     const settings: DashboardTab = { id: 'settings', label: 'Settings', icon: this.tabIcons.settings };
+    const invitations: DashboardTab = {
+      id: 'invitations',
+      label: 'My Invitations 📬',
+      icon: this.tabIcons.invitations
+    };
 
     if (t === UserType.DONOR) {
       return [
-        { id: 'campaigns', label: 'Campaigns', icon: this.tabIcons.campaigns },
-        { id: 'projects', label: 'Projects', icon: this.tabIcons.projects },
         { id: 'events', label: 'Events', icon: this.tabIcons.events },
         profile,
         settings
@@ -301,15 +344,14 @@ export class DashboardComponent implements OnInit {
       return [
         { id: 'events', label: 'Events', icon: this.tabIcons.events },
         { id: 'volunteering', label: 'Volunteering', icon: this.tabIcons.volunteering },
-        { id: 'campaigns', label: 'Campaigns', icon: this.tabIcons.campaigns },
+        invitations,
         profile,
         settings
       ];
     }
     return [
-      { id: 'campaigns', label: 'Campaigns', icon: this.tabIcons.campaigns },
       { id: 'events', label: 'Events', icon: this.tabIcons.events },
-      { id: 'projects', label: 'Projects', icon: this.tabIcons.projects },
+      invitations,
       profile,
       settings
     ];
@@ -317,6 +359,21 @@ export class DashboardComponent implements OnInit {
 
   setActiveTab(tabId: string): void {
     this.activeTab = tabId;
+    if (tabId === 'invitations') {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { tab: 'invitations' },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
+    } else {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { tab: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
+    }
   }
 
   isActiveTab(tabId: string): boolean {
@@ -468,6 +525,44 @@ export class DashboardComponent implements OnInit {
 
   certificateKey(p: EventParticipation): string {
     return `${p.eventId}-${p.userId}`;
+  }
+
+  respondInvitation(inv: EventInvitation, response: 'ACCEPTED' | 'DECLINED'): void {
+    const token = inv.invitationToken;
+    if (!token) {
+      return;
+    }
+    this.eventInvitationService.respond(token, response).subscribe({
+      next: (r) => {
+        this.inviteToast = r.message;
+        inv.status = response;
+        inv.respondedAt = new Date().toISOString();
+      },
+      error: () => {
+        this.inviteToast = 'Could not save your response.';
+      }
+    });
+  }
+
+  invitationScoreBarClass(percent: number): string {
+    if (percent <= 40) {
+      return 'bg-red-500';
+    }
+    if (percent <= 70) {
+      return 'bg-amber-500';
+    }
+    return 'bg-emerald-500';
+  }
+
+  invitationTierLabel(tier: string): string {
+    switch (tier) {
+      case 'PRIORITY_IMMEDIATE':
+        return 'Priority invite';
+      case 'STANDARD_INVITE':
+        return 'Standard invite';
+      default:
+        return tier;
+    }
   }
 
   downloadParticipationCertificate(p: EventParticipation): void {

@@ -24,7 +24,7 @@ public class RecommendationController {
     private final UserRepository userRepository;
     private final FeedRecommendationService feedRecommendationService;
 
-    @Operation(summary = "Personalized feed (campaigns, projects, posts) from ML service")
+    @Operation(summary = "Personalized feed: recommended upcoming events (ML service)")
     @GetMapping("/feed")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<FeedResponse> getRecommendedFeed(Authentication authentication) {

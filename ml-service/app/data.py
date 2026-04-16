@@ -7,8 +7,9 @@ def get_engine():
     host = os.getenv("DB_HOST", "localhost")
     port = os.getenv("DB_PORT", "3306")
     name = os.getenv("DB_NAME", "civic_platform")
-    user = os.getenv("DB_USER", "civic_user")
-    password = os.getenv("DB_PASSWORD", "civic_password")
+    # Defaults align with Spring Boot local `application.yml` (root / DB_PASSWORD or root)
+    user = os.getenv("DB_USER", "root")
+    password = os.getenv("DB_PASSWORD", "root")
     url = f"mysql+pymysql://{user}:{password}@{host}:{port}/{name}"
     return create_engine(url)
 
@@ -101,6 +102,30 @@ def load_user_fundings() -> pd.DataFrame:
     """Load which users already funded which projects"""
     engine = get_engine()
     query = "SELECT user_id, project_id FROM project_funding"
+    with engine.connect() as conn:
+        return pd.read_sql(text(query), conn)
+
+
+def load_upcoming_events() -> pd.DataFrame:
+    engine = get_engine()
+    query = """
+        SELECT id, title, type, date, location, current_participants, max_capacity, created_at, status
+        FROM event
+        WHERE status = 'UPCOMING'
+        ORDER BY date ASC
+        LIMIT 200
+    """
+    with engine.connect() as conn:
+        return pd.read_sql(text(query), conn)
+
+
+def load_user_event_registrations() -> pd.DataFrame:
+    """Users already registered for events (exclude cancelled)."""
+    engine = get_engine()
+    query = """
+        SELECT user_id, event_id FROM event_participant
+        WHERE status != 'CANCELLED'
+    """
     with engine.connect() as conn:
         return pd.read_sql(text(query), conn)
 

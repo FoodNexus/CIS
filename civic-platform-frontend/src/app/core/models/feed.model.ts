@@ -1,4 +1,5 @@
 import { Campaign } from '@core/services/campaigns.service';
+import { Event } from '@core/services/events.service';
 import { Post } from '@core/services/posts.service';
 import { Project } from '@core/services/projects.service';
 
@@ -9,6 +10,7 @@ export interface FeedResponse {
   campaigns: Campaign[];
   projects: Project[];
   posts: Post[];
+  events: Event[];
   modelVersion?: string;
   coldStart?: boolean;
 }

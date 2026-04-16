@@ -37,4 +37,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to,
             @Param("type") UserType type);
+
+    @Query("SELECT u FROM User u WHERE u.userType IN ('CITIZEN','AMBASSADOR','PARTICIPANT') AND u.admin = false")
+    List<User> findEligibleCitizensForInvitations();
 }

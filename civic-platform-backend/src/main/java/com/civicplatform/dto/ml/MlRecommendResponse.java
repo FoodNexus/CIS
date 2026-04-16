@@ -25,6 +25,10 @@ public class MlRecommendResponse {
     @JsonDeserialize(contentAs = Long.class)
     private List<Long> recommendedPostIds = new ArrayList<>();
 
+    @JsonProperty("recommended_event_ids")
+    @JsonDeserialize(contentAs = Long.class)
+    private List<Long> recommendedEventIds = new ArrayList<>();
+
     @JsonProperty("model_version")
     private String modelVersion;
 
@@ -37,6 +41,7 @@ public class MlRecommendResponse {
         r.setRecommendedCampaignIds(new ArrayList<>());
         r.setRecommendedProjectIds(new ArrayList<>());
         r.setRecommendedPostIds(new ArrayList<>());
+        r.setRecommendedEventIds(new ArrayList<>());
         r.setModelVersion("none");
         r.setColdStart(true);
         return r;

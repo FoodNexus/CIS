@@ -4,9 +4,10 @@ from typing import List, Optional
 
 class RecommendRequest(BaseModel):
     user_id: int = Field(..., ge=1, description="Platform user id")
-    limit_campaigns: Optional[int] = Field(default=5, ge=1, le=50)
-    limit_projects: Optional[int] = Field(default=5, ge=1, le=50)
-    limit_posts: Optional[int] = Field(default=10, ge=1, le=50)
+    limit_campaigns: Optional[int] = Field(default=5, ge=0, le=50)
+    limit_projects: Optional[int] = Field(default=5, ge=0, le=50)
+    limit_posts: Optional[int] = Field(default=10, ge=0, le=50)
+    limit_events: Optional[int] = Field(default=9, ge=0, le=50)
 
 
 class RecommendResponse(BaseModel):
@@ -16,6 +17,7 @@ class RecommendResponse(BaseModel):
     recommended_campaign_ids: List[int]
     recommended_project_ids: List[int]
     recommended_post_ids: List[int]
+    recommended_event_ids: List[int]
     model_version: str
     is_cold_start: bool
 

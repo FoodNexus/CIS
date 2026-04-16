@@ -48,16 +48,32 @@ def _patch_data_and_model(monkeypatch):
             "created_at": [datetime.now()],
         }
     )
+    events = pd.DataFrame(
+        {
+            "id": [40],
+            "title": ["E1"],
+            "type": ["VISITE"],
+            "date": [datetime.now()],
+            "location": [""],
+            "current_participants": [0],
+            "max_capacity": [100],
+            "created_at": [datetime.now()],
+            "status": ["UPCOMING"],
+        }
+    )
     votes = pd.DataFrame(columns=["user_id", "campaign_id"])
     fundings = pd.DataFrame(columns=["user_id", "project_id"])
+    event_regs = pd.DataFrame(columns=["user_id", "event_id"])
 
     monkeypatch.setattr(main, "get_interaction_count", lambda: 7)
     monkeypatch.setattr(main, "load_interactions", lambda: empty_ix)
     monkeypatch.setattr(main, "load_active_campaigns", lambda: campaigns)
     monkeypatch.setattr(main, "load_active_projects", lambda: projects)
     monkeypatch.setattr(main, "load_accepted_posts", lambda: posts)
+    monkeypatch.setattr(main, "load_upcoming_events", lambda: events)
     monkeypatch.setattr(main, "load_user_votes", lambda: votes)
     monkeypatch.setattr(main, "load_user_fundings", lambda: fundings)
+    monkeypatch.setattr(main, "load_user_event_registrations", lambda: event_regs)
 
     m = main.recommendation_model
     monkeypatch.setattr(m, "is_loaded", False, raising=False)
@@ -100,6 +116,7 @@ def test_recommend_ok_cold_start(client: TestClient):
     assert body["recommended_campaign_ids"] == [10, 11]
     assert body["recommended_project_ids"] == [20]
     assert body["recommended_post_ids"] == [30]
+    assert body["recommended_event_ids"] == [40]
 
 
 def test_recommend_validation_invalid_user(client: TestClient):

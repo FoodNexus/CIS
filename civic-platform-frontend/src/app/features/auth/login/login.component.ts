@@ -27,7 +27,8 @@ export class LoginComponent {
   ) {
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/dashboard';
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      // Looser than Validators.email so seed addresses like *@test.local always validate.
+      email: ['', [Validators.required, Validators.pattern(/^[^\s@]+@[^\s@]+$/)]],
       password: ['', [Validators.required]]
     });
   }

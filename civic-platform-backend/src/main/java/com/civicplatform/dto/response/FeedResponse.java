@@ -20,6 +20,8 @@ public class FeedResponse {
     private List<ProjectResponse> projects = new ArrayList<>();
     @Builder.Default
     private List<PostResponse> posts = new ArrayList<>();
+    @Builder.Default
+    private List<EventResponse> events = new ArrayList<>();
     private String modelVersion;
     private Boolean coldStart;
 }

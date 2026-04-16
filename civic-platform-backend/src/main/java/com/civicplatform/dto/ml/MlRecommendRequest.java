@@ -17,4 +17,7 @@ public class MlRecommendRequest {
 
     @JsonProperty("limit_posts")
     private int limitPosts = 10;
+
+    @JsonProperty("limit_events")
+    private int limitEvents = 9;
 }

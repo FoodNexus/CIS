@@ -1,25 +1,17 @@
 package com.civicplatform.service;
 
 import com.civicplatform.dto.ml.MlRecommendResponse;
-import com.civicplatform.dto.response.CampaignResponse;
+import com.civicplatform.dto.response.EventResponse;
 import com.civicplatform.dto.response.FeedResponse;
-import com.civicplatform.dto.response.PostResponse;
-import com.civicplatform.dto.response.ProjectResponse;
-import com.civicplatform.entity.Campaign;
-import com.civicplatform.entity.Post;
-import com.civicplatform.entity.Project;
+import com.civicplatform.entity.Event;
 import com.civicplatform.entity.User;
-import com.civicplatform.mapper.CampaignMapper;
-import com.civicplatform.mapper.PostMapper;
-import com.civicplatform.mapper.ProjectMapper;
-import com.civicplatform.repository.CampaignRepository;
-import com.civicplatform.repository.CampaignVoteRepository;
-import com.civicplatform.repository.PostRepository;
-import com.civicplatform.repository.ProjectRepository;
+import com.civicplatform.mapper.EventMapper;
+import com.civicplatform.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,58 +23,54 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class FeedRecommendationService {
 
-    private final MlServiceClient mlServiceClient;
-    private final CampaignRepository campaignRepository;
-    private final ProjectRepository projectRepository;
-    private final PostRepository postRepository;
-    private final CampaignVoteRepository campaignVoteRepository;
-    private final CampaignMapper campaignMapper;
-    private final ProjectMapper projectMapper;
-    private final PostMapper postMapper;
+    private static final int FALLBACK_EVENTS = 9;
 
+    private final MlServiceClient mlServiceClient;
+    private final EventRepository eventRepository;
+    private final EventMapper eventMapper;
+
+    /**
+     * Personalized feed for citizens: events only (ML + fallback). Campaigns, projects, and posts
+     * are not used for the primary discovery experience.
+     */
     public FeedResponse buildFeed(User user) {
         MlRecommendResponse ml = mlServiceClient.getRecommendations(user.getId());
 
-        List<Long> cIds = ml.getRecommendedCampaignIds() != null ? ml.getRecommendedCampaignIds() : List.of();
-        List<Long> pIds = ml.getRecommendedProjectIds() != null ? ml.getRecommendedProjectIds() : List.of();
-        List<Long> postIds = ml.getRecommendedPostIds() != null ? ml.getRecommendedPostIds() : List.of();
+        List<Long> eIds = ml.getRecommendedEventIds() != null ? ml.getRecommendedEventIds() : List.of();
+        List<Event> events = orderByIds(eIds, eventRepository.findAllById(eIds), Event::getId);
 
-        List<Campaign> campaigns = orderByIds(cIds, campaignRepository.findAllById(cIds), Campaign::getId);
-        List<Project> projects = orderByIds(pIds, projectRepository.findAllById(pIds), Project::getId);
-        List<Post> posts = orderByIds(postIds, postRepository.findAllById(postIds), Post::getId);
-
-        List<CampaignResponse> campaignResponses = campaigns.stream()
-                .map(c -> {
-                    CampaignResponse r = campaignMapper.toResponse(c);
-                    r.setVoteCount((int) campaignVoteRepository.countByCampaignId(c.getId()));
+        List<EventResponse> eventResponses = events.stream()
+                .map(e -> {
+                    EventResponse r = eventMapper.toResponse(e);
                     r.setIsRecommended(true);
                     return r;
                 })
                 .toList();
 
-        List<ProjectResponse> projectResponses = projects.stream()
-                .map(p -> {
-                    ProjectResponse r = projectMapper.toResponse(p);
-                    r.setIsRecommended(true);
-                    return r;
-                })
-                .toList();
-
-        List<PostResponse> postResponses = posts.stream()
-                .map(p -> {
-                    PostResponse r = postMapper.toSummaryResponse(p);
-                    r.setIsRecommended(true);
-                    return r;
-                })
-                .toList();
+        if (eventResponses.isEmpty()) {
+            eventResponses = fallbackEvents(FALLBACK_EVENTS);
+        }
 
         return FeedResponse.builder()
-                .campaigns(campaignResponses)
-                .projects(projectResponses)
-                .posts(postResponses)
+                .campaigns(List.of())
+                .projects(List.of())
+                .posts(List.of())
+                .events(eventResponses)
                 .modelVersion(ml.getModelVersion())
                 .coldStart(ml.isColdStart())
                 .build();
+    }
+
+    private List<EventResponse> fallbackEvents(int limit) {
+        List<Event> upcoming = eventRepository.findUpcomingEvents(LocalDateTime.now());
+        return upcoming.stream()
+                .limit(limit)
+                .map(e -> {
+                    EventResponse r = eventMapper.toResponse(e);
+                    r.setIsRecommended(false);
+                    return r;
+                })
+                .toList();
     }
 
     private static <T> List<T> orderByIds(List<Long> ids, List<T> found, Function<T, Long> idGetter) {

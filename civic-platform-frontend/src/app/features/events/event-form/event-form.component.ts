@@ -49,6 +49,17 @@ export class EventFormComponent implements OnInit {
     return this.router.url.split('?')[0].startsWith('/admin');
   }
 
+  /** Display labels in English (values remain backend enum strings). */
+  eventTypeLabel(t: EventType): string {
+    const labels: Record<EventType, string> = {
+      [EventType.VISITE]: 'Site visit',
+      [EventType.FORMATION]: 'Training / workshop',
+      [EventType.DISTRIBUTION]: 'Distribution',
+      [EventType.COLLECTE]: 'Collection drive'
+    };
+    return labels[t] ?? t;
+  }
+
   eventsListPath(): string {
     return this.isAdminRoute() ? '/admin/events' : '/events';
   }
