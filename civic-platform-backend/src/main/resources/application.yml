@@ -14,11 +14,15 @@ spring:
       max-file-size: 50MB
       max-request-size: 55MB
   
+  # Use the SAME host/port/database as phpMyAdmin / your terminal client.
+  # Docker Compose maps MariaDB to host port 3307 (see repo docker-compose.yml); default here is 3306 for a local install.
+  # Example if your data is in Docker: export SPRING_DATASOURCE_URL=jdbc:mariadb://127.0.0.1:3307/civic_platform
+  #   export SPRING_DATASOURCE_USERNAME=civic_user && export SPRING_DATASOURCE_PASSWORD=civic_password
   datasource:
-    url: jdbc:mariadb://localhost:3306/civic_platform?createDatabaseIfNotExist=true
+    url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://localhost:3306/civic_platform?createDatabaseIfNotExist=true}
     driver-class-name: org.mariadb.jdbc.Driver
-    username: root
-    password: ${DB_PASSWORD:root}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:root}}
     
   flyway:
     enabled: true
