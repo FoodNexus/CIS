@@ -32,4 +32,13 @@ public interface EventCitizenInvitationRepository extends JpaRepository<EventCit
     @Modifying
     @Query("DELETE FROM EventCitizenInvitation e WHERE e.event.id = :eventId")
     void deleteByEventId(@Param("eventId") Long eventId);
+
+    /**
+     * True when this citizen appears on the invitation list for any event organized by the given user.
+     * Used so organizers can open invitee profiles without full admin access.
+     */
+    @Query("SELECT COUNT(eci) > 0 FROM EventCitizenInvitation eci "
+            + "WHERE eci.citizen.id = :citizenId AND eci.event.organizerId = :organizerId")
+    boolean existsByCitizenIdAndEventOrganizerId(
+            @Param("citizenId") Long citizenId, @Param("organizerId") Long organizerId);
 }

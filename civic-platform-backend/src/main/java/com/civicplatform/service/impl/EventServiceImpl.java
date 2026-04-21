@@ -25,9 +25,12 @@ import com.civicplatform.service.UserInteractionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,7 +57,18 @@ public class EventServiceImpl implements EventService {
         event.setOrganizerId(organizerId);
 
         event = eventRepository.save(event);
-        eventInvitationMatchingAsyncRunner.triggerMatchingAfterEventCreated(event.getId());
+        final Long newEventId = event.getId();
+        // Run matching only after this transaction commits so the async task can load the event from the DB.
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    eventInvitationMatchingAsyncRunner.triggerMatchingAfterEventCreated(newEventId);
+                }
+            });
+        } else {
+            eventInvitationMatchingAsyncRunner.triggerMatchingAfterEventCreated(newEventId);
+        }
         return eventMapper.toResponse(event);
     }
 
@@ -197,7 +211,7 @@ public class EventServiceImpl implements EventService {
             throw new EventFullException("Event is full");
         }
 
-        if (event.getOrganizerId().equals(userId)) {
+        if (Objects.equals(event.getOrganizerId(), userId)) {
             throw new RuntimeException("Event organizers cannot register as participants for their own event");
         }
 

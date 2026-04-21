@@ -66,18 +66,23 @@ public class Event {
     
     // Helper methods
     public boolean hasCapacity() {
-        return currentParticipants < maxCapacity;
+        int cur = currentParticipants == null ? 0 : currentParticipants;
+        int max = maxCapacity == null ? Integer.MAX_VALUE : maxCapacity;
+        return cur < max;
     }
-    
+
     public void incrementParticipants() {
-        if (hasCapacity()) {
-            currentParticipants++;
+        if (!hasCapacity()) {
+            return;
         }
+        int cur = currentParticipants == null ? 0 : currentParticipants;
+        currentParticipants = cur + 1;
     }
-    
+
     public void decrementParticipants() {
-        if (currentParticipants > 0) {
-            currentParticipants--;
+        int cur = currentParticipants == null ? 0 : currentParticipants;
+        if (cur > 0) {
+            currentParticipants = cur - 1;
         }
     }
     

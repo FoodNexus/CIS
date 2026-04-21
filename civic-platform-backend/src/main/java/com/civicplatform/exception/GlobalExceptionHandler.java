@@ -160,6 +160,18 @@ public class GlobalExceptionHandler {
      * Campaign vote rules return {@link RuntimeException} with a clear message — expose as 400 so the UI
      * can show "already voted" / "DRAFT only" instead of a generic 500.
      */
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<ErrorResponse> handleNullPointerException(NullPointerException ex, WebRequest request) {
+        log.error("NullPointerException", ex);
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .message("A server error occurred while processing your request. Please try again.")
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex, WebRequest request) {
         String msg = ex.getMessage();

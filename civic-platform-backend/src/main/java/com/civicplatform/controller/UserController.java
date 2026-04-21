@@ -5,6 +5,7 @@ import com.civicplatform.dto.request.UserRequest;
 import com.civicplatform.dto.response.UserResponse;
 import com.civicplatform.enums.UserType;
 import com.civicplatform.entity.User;
+import com.civicplatform.repository.EventCitizenInvitationRepository;
 import com.civicplatform.repository.UserRepository;
 import com.civicplatform.security.RegularAccountPolicy;
 import com.civicplatform.service.ProfilePictureStorageService;
@@ -38,6 +39,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserRepository userRepository;
+    private final EventCitizenInvitationRepository eventCitizenInvitationRepository;
     private final QrCodeService qrCodeService;
     private final ProfilePictureStorageService profilePictureStorageService;
 
@@ -155,13 +157,17 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Get user by ID (self or platform admin)")
+    @Operation(summary = "Get user by ID (self, platform admin, or event organizer who invited this citizen)")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id, Authentication authentication) {
         User authUser = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new AccessDeniedException("User not resolved"));
         if (!authUser.isAdmin() && !authUser.getId().equals(id)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            boolean invitedByOrganizer = eventCitizenInvitationRepository.existsByCitizenIdAndEventOrganizerId(
+                    id, authUser.getId());
+            if (!invitedByOrganizer) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
         }
         UserResponse response = userService.getUserById(id);
         return ResponseEntity.ok(response);

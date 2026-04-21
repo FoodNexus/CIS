@@ -116,6 +116,11 @@ public class EventInvitationMatchingService {
             ranked.add(new InvitationScoreRow(citizen, snapshot, decision));
         }
 
+        if (ranked.isEmpty()) {
+            log.warn("Citizen invitation matching for event {}: no eligible citizens in the pool (need CITIZEN/PARTICIPANT/AMBASSADOR users)", eventId);
+            return List.of();
+        }
+
         ranked.sort(Comparator.comparing((InvitationScoreRow s) -> s.snapshot().getCompositeRate()).reversed());
 
         int nurtureSent = 0;
@@ -188,6 +193,7 @@ public class EventInvitationMatchingService {
             }
         }
 
+        log.info("Citizen invitation matching for event {}: {} invitation row(s) saved", eventId, saved.size());
         return saved;
     }
 
@@ -200,31 +206,42 @@ public class EventInvitationMatchingService {
         List<InvitationScoreRow> nonNurture = ranked.stream()
                 .filter(s -> s.decision().getTier() != InvitationTier.NURTURE_ALTERNATIVE)
                 .toList();
+        List<InvitationScoreRow> pick;
         if (!FoodCommunityContext.matchesEvent(event)) {
-            return nonNurture.stream().limit(MAX_DIRECT_INVITES).toList();
-        }
-        List<InvitationScoreRow> atOrAboveFoodMin = nonNurture.stream()
-                .filter(s -> s.snapshot().getCompositeRate() >= foodMinComposite)
-                .toList();
-        List<InvitationScoreRow> primary = atOrAboveFoodMin.stream().limit(MAX_DIRECT_INVITES).toList();
-        if (primary.size() >= foodMinDirectInvites || primary.size() >= MAX_DIRECT_INVITES) {
-            return primary;
-        }
-        Set<Long> seen = new HashSet<>(primary.stream().map(s -> s.citizen().getId()).toList());
-        List<InvitationScoreRow> result = new ArrayList<>(primary);
-        for (InvitationScoreRow s : nonNurture) {
-            if (result.size() >= MAX_DIRECT_INVITES) {
-                break;
+            pick = nonNurture.stream().limit(MAX_DIRECT_INVITES).toList();
+        } else {
+            List<InvitationScoreRow> atOrAboveFoodMin = nonNurture.stream()
+                    .filter(s -> s.snapshot().getCompositeRate() >= foodMinComposite)
+                    .toList();
+            List<InvitationScoreRow> primary = atOrAboveFoodMin.stream().limit(MAX_DIRECT_INVITES).toList();
+            if (primary.size() >= foodMinDirectInvites || primary.size() >= MAX_DIRECT_INVITES) {
+                pick = primary;
+            } else {
+                Set<Long> seen = new HashSet<>(primary.stream().map(s -> s.citizen().getId()).toList());
+                List<InvitationScoreRow> result = new ArrayList<>(primary);
+                for (InvitationScoreRow s : nonNurture) {
+                    if (result.size() >= MAX_DIRECT_INVITES) {
+                        break;
+                    }
+                    if (seen.contains(s.citizen().getId())) {
+                        continue;
+                    }
+                    if (s.snapshot().getCompositeRate() >= standardThreshold) {
+                        result.add(s);
+                        seen.add(s.citizen().getId());
+                    }
+                }
+                pick = result;
             }
-            if (seen.contains(s.citizen().getId())) {
-                continue;
-            }
-            if (s.snapshot().getCompositeRate() >= standardThreshold) {
-                result.add(s);
-                seen.add(s.citizen().getId());
-            }
         }
-        return result;
+        if (pick.isEmpty() && !ranked.isEmpty()) {
+            log.info(
+                    "Invitation matching: no citizens above invite threshold for event {}; surfacing top {} by composite rate",
+                    event.getId(),
+                    Math.min(5, ranked.size()));
+            pick = ranked.stream().limit(Math.min(5, MAX_DIRECT_INVITES)).toList();
+        }
+        return pick;
     }
 
     private String buildInviteNotificationBody(String eventTitle, InvitationRateDecision decision) {
