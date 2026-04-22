@@ -29,8 +29,13 @@ services:
       SPRING_DATASOURCE_USERNAME: civic_user
       SPRING_DATASOURCE_PASSWORD: civic_password
       DB_PASSWORD: civic_password
-      # Backend validates Keycloak JWTs; default points to host Keycloak on 8180.
-      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI:-http://host.docker.internal:8180/realms/cis}
+      SPRING_FLYWAY_ENABLED: "false"
+      # Match token `iss` claim emitted to browser clients.
+      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI:-http://localhost:8180/realms/foodnexus}
+      # Container-only endpoint for downloading JWKS from host Keycloak.
+      KEYCLOAK_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI:-http://host.docker.internal:8180/realms/foodnexus/protocol/openid-connect/certs}
+      KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:-cis-back}
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-2Z7dNpwye1HkrXCB1IXu7ralwXuMapos}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
     extra_hosts:
       - "host.docker.internal:host-gateway"

@@ -20,6 +20,9 @@ const STORAGE_KEYS = {
 })
 export class AuthService {
   private readonly profileUrl = `${environment.apiUrl}/users/me`;
+  private readonly oidcScope = environment.keycloak.scope ?? 'openid profile email';
+  private readonly oidcRedirectUri = window.location.origin;
+  private readonly oidcPostLogoutRedirectUri = window.location.origin;
   private readonly keycloak = new Keycloak({
     url: environment.keycloak.url,
     realm: environment.keycloak.realm,
@@ -40,8 +43,10 @@ export class AuthService {
 
     const authenticated = await this.keycloak.init({
       onLoad: 'check-sso',
+      flow: 'standard',
       pkceMethod: 'S256',
-      checkLoginIframe: false
+      checkLoginIframe: false,
+      redirectUri: this.oidcRedirectUri
     });
 
     if (!authenticated) {
@@ -58,7 +63,8 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<void> {
     const options: KeycloakLoginOptions = {
-      redirectUri: window.location.origin + '/dashboard'
+      redirectUri: this.oidcRedirectUri,
+      scope: this.oidcScope
     };
     if (credentials?.email?.trim()) {
       (options as KeycloakLoginOptions & { loginHint?: string }).loginHint = credentials.email.trim();
@@ -69,7 +75,8 @@ export class AuthService {
   register(userData: RegisterRequest): Observable<void> {
     const options: KeycloakLoginOptions = {
       action: 'register',
-      redirectUri: window.location.origin + '/dashboard'
+      redirectUri: this.oidcRedirectUri,
+      scope: this.oidcScope
     };
     if (userData?.email?.trim()) {
       (options as KeycloakLoginOptions & { loginHint?: string }).loginHint = userData.email.trim();
@@ -78,15 +85,16 @@ export class AuthService {
   }
 
   loginRedirect(returnUrl?: string): void {
-    const sanitized = returnUrl?.startsWith('/') ? returnUrl : '/dashboard';
+    const sanitized = returnUrl?.startsWith('/') ? returnUrl : '/';
     void this.keycloak.login({
-      redirectUri: window.location.origin + sanitized
+      redirectUri: this.oidcRedirectUri + sanitized,
+      scope: this.oidcScope
     });
   }
 
   logout(): void {
     this.clearAuthState();
-    void this.keycloak.logout({ redirectUri: `${window.location.origin}/login` });
+    void this.keycloak.logout({ redirectUri: this.oidcPostLogoutRedirectUri });
   }
 
   getToken(): string | null {

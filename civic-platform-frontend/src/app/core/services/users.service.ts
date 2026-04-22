@@ -26,10 +26,20 @@ export class UsersService {
     return this.http.put<User>(`${this.baseUrl}/${id}/profile`, profileData);
   }
 
+  updateMyProfile(profileData: Partial<User>): Observable<User> {
+    return this.http.put<User>(`${this.baseUrl}/me/profile`, profileData);
+  }
+
   uploadProfilePicture(id: number, file: File): Observable<User> {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<User>(`${this.baseUrl}/${id}/profile-picture`, formData);
+  }
+
+  uploadMyProfilePicture(file: File): Observable<User> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<User>(`${this.baseUrl}/me/profile-picture`, formData);
   }
 
   /** Public image URL (add cache-bust query when needed). */

@@ -9,7 +9,7 @@ function resolveApiBaseUrl(): string {
   } catch {
     /* ignore */
   }
-  return 'http://localhost:8082/api';
+  return 'http://localhost:8081/api';
 }
 
 export const environment = {
@@ -19,9 +19,12 @@ export const environment = {
     return resolveApiBaseUrl();
   },
   keycloak: {
-    url: 'http://localhost:8080',
-    realm: 'cis',
-    clientId: 'civic-frontend'
+    url: 'http://localhost:8180',
+    realm: 'foodnexus',
+    issuer: 'http://localhost:8180/realms/foodnexus',
+    clientId: 'cis-front',
+    responseType: 'code',
+    scope: 'openid profile email'
   },
   /** Optional: https://developers.giphy.com/dashboard/ — enables GIF search in post/comment composer */
   giphyApiKey: ''

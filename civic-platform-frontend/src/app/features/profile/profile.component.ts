@@ -237,7 +237,7 @@ export class ProfileComponent {
   onAvatarFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file || !this.currentUser?.id) {
+    if (!file || !this.currentUser) {
       input.value = '';
       return;
     }
@@ -259,7 +259,7 @@ export class ProfileComponent {
   }
 
   applyCrop(): void {
-    if (!this.pendingCropBlob || !this.currentUser?.id) {
+    if (!this.pendingCropBlob || !this.currentUser) {
       this.messageType = 'error';
       this.message = 'Adjust the crop area and wait for the preview before applying.';
       return;
@@ -275,10 +275,10 @@ export class ProfileComponent {
   }
 
   private uploadProfileFile(file: File): void {
-    if (!this.currentUser?.id) {
+    if (!this.currentUser) {
       return;
     }
-    this.usersService.uploadProfilePicture(this.currentUser.id, file).subscribe({
+    this.usersService.uploadMyProfilePicture(file).subscribe({
       next: (updated) => {
         const revision = Date.now();
         const refreshed: User = {
@@ -341,7 +341,7 @@ export class ProfileComponent {
   }
 
   downloadMyQr(): void {
-    if (!this.currentUser?.id) return;
+    if (!this.currentUser || this.currentUser.id <= 0) return;
     this.qrDownloading = true;
     this.usersService.downloadQrCodePng(this.currentUser.id).subscribe({
       next: (blob) => {
@@ -377,7 +377,7 @@ export class ProfileComponent {
       contactEmail: this.profileForm.value.contactEmail
     };
 
-    this.usersService.updateProfile(this.currentUser.id, profileData).subscribe({
+    this.usersService.updateMyProfile(profileData).subscribe({
       next: (updated) => {
         // Merge updated fields with current user, preserving identity fields
         const refreshed: User = {

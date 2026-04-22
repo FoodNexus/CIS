@@ -58,7 +58,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/cis}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/foodnexus}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://host.docker.internal:8180/realms/foodnexus/protocol/openid-connect/certs}
     
 # CORS Configuration
 cors:

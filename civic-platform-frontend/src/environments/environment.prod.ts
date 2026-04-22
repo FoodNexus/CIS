@@ -3,9 +3,12 @@ export const environment = {
   production: true,
   apiUrl: '/api',
   keycloak: {
-    url: 'http://localhost:8080',
-    realm: 'cis',
-    clientId: 'civic-frontend'
+    url: 'http://localhost:8180',
+    realm: 'foodnexus',
+    issuer: 'http://localhost:8180/realms/foodnexus',
+    clientId: 'cis-front',
+    responseType: 'code',
+    scope: 'openid profile email'
   },
   giphyApiKey: ''
 };

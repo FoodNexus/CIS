@@ -105,15 +105,21 @@ public class UserController {
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file,
             Authentication authentication) {
-        User authUser = currentUserResolver.resolveRequired(authentication);
-        if (authUser.isAdmin()) {
-            throw new AccessDeniedException("Admins do not have participant profiles.");
-        }
-        UserResponse current = userService.getUserById(id);
-        if (!authUser.getEmail().equalsIgnoreCase(current.getEmail())) {
+        User authUser = requireRegularAuthenticatedUser(authentication);
+        if (!canAccessOwnProfile(authUser, id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         UserResponse response = userService.uploadProfilePicture(id, file);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Upload current user profile picture (JPEG, PNG, or WebP)")
+    @PostMapping("/me/profile-picture")
+    public ResponseEntity<UserResponse> uploadMyProfilePicture(
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) {
+        User authUser = requireRegularAuthenticatedUser(authentication);
+        UserResponse response = userService.uploadProfilePicture(authUser.getId(), file);
         return ResponseEntity.ok(response);
     }
 
@@ -182,15 +188,21 @@ public class UserController {
     @Operation(summary = "Update user profile")
     @PutMapping("/{id}/profile")
     public ResponseEntity<UserResponse> updateProfile(@PathVariable Long id, @Valid @RequestBody ProfileUpdateRequest request, Authentication authentication) {
-        User authUser = currentUserResolver.resolveRequired(authentication);
-        if (authUser.isAdmin()) {
-            throw new AccessDeniedException("Admins do not have participant profiles.");
-        }
-        UserResponse current = userService.getUserById(id);
-        if (!authUser.getEmail().equalsIgnoreCase(current.getEmail())) {
+        User authUser = requireRegularAuthenticatedUser(authentication);
+        if (!canAccessOwnProfile(authUser, id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         UserResponse response = userService.updateProfile(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Update current authenticated regular user profile")
+    @PutMapping("/me/profile")
+    public ResponseEntity<UserResponse> updateMyProfile(
+            @Valid @RequestBody ProfileUpdateRequest request,
+            Authentication authentication) {
+        User authUser = requireRegularAuthenticatedUser(authentication);
+        UserResponse response = userService.updateProfile(authUser.getId(), request);
         return ResponseEntity.ok(response);
     }
 
@@ -216,5 +228,18 @@ public class UserController {
     public ResponseEntity<Long> countUsersByType(@PathVariable UserType userType) {
         Long count = userService.countUsersByType(userType);
         return ResponseEntity.ok(count);
+    }
+
+    private User requireRegularAuthenticatedUser(Authentication authentication) {
+        User authUser = currentUserResolver.resolveRequired(authentication);
+        if (authUser.isAdmin()) {
+            throw new AccessDeniedException("Admins do not have participant profiles.");
+        }
+        return authUser;
+    }
+
+    private boolean canAccessOwnProfile(User authUser, Long requestedUserId) {
+        UserResponse current = userService.getUserById(requestedUserId);
+        return authUser.getEmail().equalsIgnoreCase(current.getEmail());
     }
 }
