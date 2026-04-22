@@ -1,0 +1,9 @@
+metric,value
+total_interactions,9866
+trainable_interactions_non_donor_non_admin,9790
+distinct_users_in_training,114
+distinct_items_in_training,345
+active_campaigns,30
+active_projects,76
+accepted_posts,45
+upcoming_events,42

@@ -33,7 +33,7 @@ public class MlServiceClient {
         String url = mlServiceUrl + "/recommend";
         MlRecommendRequest request = new MlRecommendRequest();
         request.setUserId(userId);
-        request.setLimitCampaigns(0);
+        request.setLimitCampaigns(6);
         request.setLimitProjects(0);
         request.setLimitPosts(0);
         request.setLimitEvents(9);

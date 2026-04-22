@@ -1,11 +1,16 @@
 package com.civicplatform.service;
 
 import com.civicplatform.dto.ml.MlRecommendResponse;
+import com.civicplatform.dto.response.CampaignResponse;
 import com.civicplatform.dto.response.EventResponse;
 import com.civicplatform.dto.response.FeedResponse;
+import com.civicplatform.entity.Campaign;
 import com.civicplatform.entity.Event;
+import com.civicplatform.enums.CampaignStatus;
 import com.civicplatform.entity.User;
+import com.civicplatform.mapper.CampaignMapper;
 import com.civicplatform.mapper.EventMapper;
+import com.civicplatform.repository.CampaignRepository;
 import com.civicplatform.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,18 +28,30 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class FeedRecommendationService {
 
+    private static final int FALLBACK_CAMPAIGNS = 6;
     private static final int FALLBACK_EVENTS = 9;
 
     private final MlServiceClient mlServiceClient;
+    private final CampaignRepository campaignRepository;
+    private final CampaignMapper campaignMapper;
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
 
-    /**
-     * Personalized feed for citizens: events only (ML + fallback). Campaigns, projects, and posts
-     * are not used for the primary discovery experience.
-     */
     public FeedResponse buildFeed(User user) {
         MlRecommendResponse ml = mlServiceClient.getRecommendations(user.getId());
+
+        List<Long> cIds = ml.getRecommendedCampaignIds() != null ? ml.getRecommendedCampaignIds() : List.of();
+        List<Campaign> campaigns = orderByIds(cIds, campaignRepository.findAllById(cIds), Campaign::getId);
+        List<CampaignResponse> campaignResponses = campaigns.stream()
+                .map(c -> {
+                    CampaignResponse r = campaignMapper.toResponse(c);
+                    r.setIsRecommended(true);
+                    return r;
+                })
+                .toList();
+        if (campaignResponses.isEmpty()) {
+            campaignResponses = fallbackCampaigns(FALLBACK_CAMPAIGNS);
+        }
 
         List<Long> eIds = ml.getRecommendedEventIds() != null ? ml.getRecommendedEventIds() : List.of();
         List<Event> events = orderByIds(eIds, eventRepository.findAllById(eIds), Event::getId);
@@ -52,13 +69,24 @@ public class FeedRecommendationService {
         }
 
         return FeedResponse.builder()
-                .campaigns(List.of())
+                .campaigns(campaignResponses)
                 .projects(List.of())
                 .posts(List.of())
                 .events(eventResponses)
                 .modelVersion(ml.getModelVersion())
                 .coldStart(ml.isColdStart())
                 .build();
+    }
+
+    private List<CampaignResponse> fallbackCampaigns(int limit) {
+        return campaignRepository.findByStatus(CampaignStatus.ACTIVE).stream()
+                .limit(limit)
+                .map(c -> {
+                    CampaignResponse r = campaignMapper.toResponse(c);
+                    r.setIsRecommended(false);
+                    return r;
+                })
+                .toList();
     }
 
     private List<EventResponse> fallbackEvents(int limit) {
