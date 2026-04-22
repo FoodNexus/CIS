@@ -226,12 +226,24 @@ export class CampaignsComponent implements OnInit {
   }
 
   getMoneyProgressPct(c: Campaign): number {
-    const need = Number(c.neededAmount ?? 0);
-    const cur = Number(c.goalAmount ?? 0);
-    if (!need || need <= 0) {
+    const goal = Number(c.goalAmount ?? 0);
+    if (!goal || goal <= 0) {
       return 0;
     }
-    return Math.min(100, Math.round((cur / need) * 100));
+    const raised = this.getCurrentRaisedAmount(c);
+    return Math.min(100, Math.max(0, Math.round((raised / goal) * 100)));
+  }
+
+  getCurrentRaisedAmount(c: Campaign): number {
+    const goal = Number(c.goalAmount ?? 0);
+    const needed = Number(c.neededAmount ?? 0);
+    if (!goal || goal <= 0) {
+      return 0;
+    }
+    if (needed <= 0) {
+      return goal;
+    }
+    return Math.min(goal, Math.max(0, goal - needed));
   }
 
   formatHashtag(h?: string): string {

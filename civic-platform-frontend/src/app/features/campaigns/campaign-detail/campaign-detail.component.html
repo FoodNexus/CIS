@@ -63,8 +63,8 @@
 
           <div [ngClass]="isAdminRoute() ? 'px-6 pb-6 space-y-6' : 'px-8 pb-8 space-y-6'" class="space-y-6">
             <div *ngIf="!isAdminRoute()" class="bg-gray-50 rounded-xl p-6 space-y-2 text-sm text-gray-800">
-              <p *ngIf="campaign.neededAmount != null">💰 Target amount: <strong>{{ campaign.neededAmount | number:'1.0-2' }}</strong> TND</p>
-              <p *ngIf="campaign.goalAmount != null">⚖️ Current: <strong>{{ campaign.goalAmount | number:'1.0-2' }}</strong> TND</p>
+              <p *ngIf="campaign.goalAmount != null">💰 Target amount: <strong>{{ campaign.goalAmount | number:'1.0-2' }}</strong> TND</p>
+              <p *ngIf="campaign.goalAmount != null">⚖️ Current: <strong>{{ getCurrentRaisedAmount(campaign) | number:'1.0-2' }}</strong> TND</p>
               <p *ngIf="campaign.goalKg != null">🌾 Goal kg: <strong>{{ campaign.goalKg }}</strong> kg</p>
               <p *ngIf="campaign.goalMeals != null">🍽️ Goal meals: <strong>{{ campaign.goalMeals }}</strong> meals</p>
               <p>📊 Current kg: <strong>{{ campaign.currentKg ?? 0 }}</strong> kg</p>
@@ -72,8 +72,8 @@
             </div>
 
             <div *ngIf="isAdminRoute()" class="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-2 text-sm text-slate-800">
-              <p *ngIf="campaign.neededAmount != null">💰 Target amount: <strong>{{ campaign.neededAmount | number:'1.0-2' }}</strong> TND</p>
-              <p *ngIf="campaign.goalAmount != null">⚖️ Current: <strong>{{ campaign.goalAmount | number:'1.0-2' }}</strong> TND</p>
+              <p *ngIf="campaign.goalAmount != null">💰 Target amount: <strong>{{ campaign.goalAmount | number:'1.0-2' }}</strong> TND</p>
+              <p *ngIf="campaign.goalAmount != null">⚖️ Current: <strong>{{ getCurrentRaisedAmount(campaign) | number:'1.0-2' }}</strong> TND</p>
               <p *ngIf="campaign.goalKg != null">🌾 Goal kg: <strong>{{ campaign.goalKg }}</strong> kg</p>
               <p *ngIf="campaign.goalMeals != null">🍽️ Goal meals: <strong>{{ campaign.goalMeals }}</strong> meals</p>
               <p>📊 Current kg: <strong>{{ campaign.currentKg ?? 0 }}</strong> kg</p>
@@ -83,8 +83,8 @@
             <div [ngClass]="isAdminRoute() ? 'rounded-xl border border-slate-200 bg-white p-5' : 'bg-gray-50 rounded-xl p-6'">
               <div class="flex justify-between items-end mb-3">
                 <span class="text-2xl font-bold text-slate-900">{{ getMoneyProgressPct(campaign) }}%</span>
-                <span class="text-sm text-slate-500" *ngIf="campaign.neededAmount != null">
-                  {{ campaign.goalAmount ?? 0 | number:'1.0-0' }} / {{ campaign.neededAmount | number:'1.0-0' }} TND
+                <span class="text-sm text-slate-500" *ngIf="campaign.goalAmount != null">
+                  {{ getCurrentRaisedAmount(campaign) | number:'1.0-0' }} / {{ campaign.goalAmount ?? 0 | number:'1.0-0' }} TND
                 </span>
               </div>
               <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">

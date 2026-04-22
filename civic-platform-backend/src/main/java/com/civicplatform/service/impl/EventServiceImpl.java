@@ -20,7 +20,6 @@ import com.civicplatform.enums.InteractionEntityType;
 import com.civicplatform.service.EventInvitationMatchingAsyncRunner;
 import com.civicplatform.service.EventLifecycleService;
 import com.civicplatform.service.EventService;
-import com.civicplatform.service.PromotionService;
 import com.civicplatform.service.UserInteractionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -42,7 +41,6 @@ public class EventServiceImpl implements EventService {
     private final EventParticipantRepository eventParticipantRepository;
     private final EventMapper eventMapper;
     private final EventParticipantMapper eventParticipantMapper;
-    private final PromotionService promotionService;
     private final EventLifecycleService eventLifecycleService;
     private final EventInvitationMatchingAsyncRunner eventInvitationMatchingAsyncRunner;
     private final UserInteractionService userInteractionService;
@@ -278,6 +276,8 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public void confirmAttendance(Long eventId, Long userId, boolean organizerConfirmation) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + eventId));
         EventParticipant participant = eventParticipantRepository.findByEventIdAndUserId(eventId, userId)
                 .orElseThrow(() -> new RuntimeException("User is not registered for this event"));
 
@@ -285,17 +285,20 @@ public class EventServiceImpl implements EventService {
             if (participant.getStatus() != ParticipantStatus.CHECKED_IN) {
                 throw new RuntimeException("User must be checked in before organizer confirms attendance");
             }
-        } else if (participant.getStatus() == ParticipantStatus.REGISTERED) {
+        } else if (participant.getStatus() == ParticipantStatus.REGISTERED
+                && event.getStatus() != EventStatus.COMPLETED) {
             participant.checkIn();
         } else if (participant.getStatus() != ParticipantStatus.CHECKED_IN) {
             throw new RuntimeException("Cannot confirm attendance with status: " + participant.getStatus());
         }
 
-        participant.complete();
+        // Keep participant state active until event lifecycle closes the event.
+        if (event.getStatus() == EventStatus.COMPLETED) {
+            participant.complete();
+        } else {
+            participant.setStatus(ParticipantStatus.CHECKED_IN);
+        }
         eventParticipantRepository.save(participant);
-
-        // Trigger promotion logic
-        promotionService.processEventAttendance(userId);
     }
 
     @Override

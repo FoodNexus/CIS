@@ -73,8 +73,8 @@
                 </td>
                 <td class="px-4 py-3 align-top text-slate-700 tabular-nums">
                   <span class="font-medium">{{ getMoneyProgressPct(campaign) }}%</span>
-                  <span *ngIf="campaign.neededAmount != null" class="block text-xs text-slate-500 mt-0.5">
-                    {{ campaign.goalAmount ?? 0 | number:'1.0-0' }} / {{ campaign.neededAmount | number:'1.0-0' }} TND
+                  <span *ngIf="campaign.goalAmount != null" class="block text-xs text-slate-500 mt-0.5">
+                    {{ getCurrentRaisedAmount(campaign) | number:'1.0-0' }} / {{ campaign.goalAmount ?? 0 | number:'1.0-0' }} TND
                   </span>
                 </td>
                 <td class="px-4 py-3 align-top text-slate-600 text-xs whitespace-nowrap">
@@ -265,8 +265,8 @@
                   <div class="mt-4 pt-4 border-t border-emerald-100/80">
                     <div class="flex justify-between text-xs text-slate-600 mb-1.5">
                       <span class="font-medium tabular-nums">{{ getMoneyProgressPct(campaign) }}%</span>
-                      <span *ngIf="campaign.neededAmount != null" class="text-right tabular-nums">
-                        {{ campaign.goalAmount ?? 0 | number:'1.0-0' }} / {{ campaign.neededAmount | number:'1.0-0' }} TND
+                      <span *ngIf="campaign.goalAmount != null" class="text-right tabular-nums">
+                        {{ getCurrentRaisedAmount(campaign) | number:'1.0-0' }} / {{ campaign.goalAmount ?? 0 | number:'1.0-0' }} TND
                       </span>
                       <span *ngIf="campaign.neededAmount == null" class="text-slate-400">Goal not set</span>
                     </div>

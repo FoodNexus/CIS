@@ -9,6 +9,7 @@ import com.civicplatform.enums.UserType;
 import com.civicplatform.mapper.UserMapper;
 import com.civicplatform.repository.EventParticipantRepository;
 import com.civicplatform.repository.UserRepository;
+import com.civicplatform.service.BadgeService;
 import com.civicplatform.service.EmailService;
 import com.civicplatform.service.ProfilePictureStorageService;
 import com.civicplatform.service.UserResponseAssembler;
@@ -34,6 +35,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final UserResponseAssembler userResponseAssembler;
     private final EventParticipantRepository eventParticipantRepository;
+    private final BadgeService badgeService;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final ProfilePictureStorageService profilePictureStorageService;
@@ -104,7 +106,19 @@ public class UserServiceImpl implements UserService {
 
         if (userRequest.getUserName() != null) user.setUserName(userRequest.getUserName());
         if (userRequest.getEmail() != null) user.setEmail(userRequest.getEmail());
-        if (userRequest.getUserType() != null) user.setUserType(userRequest.getUserType());
+        if (userRequest.getUserType() != null) {
+            UserType targetType = userRequest.getUserType();
+            if (targetType == UserType.PARTICIPANT) {
+                throw new RuntimeException("PARTICIPANT status is managed by event lifecycle");
+            }
+            if (targetType == UserType.AMBASSADOR) {
+                long completedEventsCount = eventParticipantRepository.countAttendedCompletedEventsByUser(id);
+                if (completedEventsCount < 5) {
+                    throw new RuntimeException("User must have completed at least 5 events to be AMBASSADOR");
+                }
+            }
+            user.setUserType(targetType);
+        }
         if (userRequest.getPassword() != null && !userRequest.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         }
@@ -116,11 +130,12 @@ public class UserServiceImpl implements UserService {
         if (userRequest.getAssociationName() != null) user.setAssociationName(userRequest.getAssociationName());
         if (userRequest.getContactName() != null) user.setContactName(userRequest.getContactName());
         if (userRequest.getContactEmail() != null) user.setContactEmail(userRequest.getContactEmail());
-        if (userRequest.getBadge() != null) user.setBadge(userRequest.getBadge());
-        if (userRequest.getPoints() != null) user.setPoints(userRequest.getPoints());
         if (userRequest.getBirthDate() != null && !userRequest.getBirthDate().isBlank()) {
             user.setBirthDate(LocalDate.parse(userRequest.getBirthDate()));
         }
+
+        // Engagement-derived metrics are system managed and tied to real actions only.
+        badgeService.applyBadgeForUser(user);
 
         user = userRepository.save(user);
         return userResponseAssembler.toUserResponse(user);
@@ -227,8 +242,7 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setUserType(UserType.AMBASSADOR);
-        user.setBadge(Badge.PLATINUM);
-        user.setAwardedDate(LocalDate.now());
+        badgeService.applyBadgeForUser(user);
 
         userRepository.save(user);
 
