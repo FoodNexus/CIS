@@ -4,6 +4,24 @@ import { Observable } from 'rxjs';
 import { User, UserType } from '../models/auth.models';
 import { environment } from '../../../environments/environment';
 
+export interface AdminUserPayload {
+  userName?: string;
+  email?: string;
+  password?: string;
+  userType?: UserType;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  companyName?: string;
+  associationName?: string;
+  contactName?: string;
+  contactEmail?: string;
+  birthDate?: string;
+  points?: number;
+  badge?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UsersService {
   private readonly baseUrl = `${environment.apiUrl}/users`;
@@ -18,7 +36,11 @@ export class UsersService {
     return this.http.get<User>(`${this.baseUrl}/${id}`);
   }
 
-  updateUser(id: number, userData: Partial<User>): Observable<User> {
+  createUser(userData: AdminUserPayload): Observable<User> {
+    return this.http.post<User>(this.baseUrl, userData);
+  }
+
+  updateUser(id: number, userData: AdminUserPayload): Observable<User> {
     return this.http.put<User>(`${this.baseUrl}/${id}`, userData);
   }
 

@@ -46,9 +46,13 @@ public class BadgeServiceImpl implements BadgeService {
         Badge computed = badgeForAttendedCount(attended);
         Badge current = user.getBadge() != null ? user.getBadge() : Badge.NONE;
 
-        if (computed.ordinal() > current.ordinal()) {
+        if (computed != current) {
             user.setBadge(computed);
+        }
+        if (computed.ordinal() > current.ordinal()) {
             user.setAwardedDate(LocalDate.now());
+        } else if (computed == Badge.NONE) {
+            user.setAwardedDate(null);
         }
     }
 

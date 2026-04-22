@@ -325,6 +325,8 @@ export class DashboardComponent implements OnInit {
   // Tab helpers — role-specific (platform admins use /admin, not this dashboard)
   getTabs(): DashboardTab[] {
     const t = this.currentUser?.userType;
+    const campaigns: DashboardTab = { id: 'campaigns', label: 'Campaigns', icon: this.tabIcons.campaigns };
+    const projects: DashboardTab = { id: 'projects', label: 'Projects', icon: this.tabIcons.projects };
     const profile: DashboardTab = { id: 'profile', label: 'Profile', icon: this.tabIcons.profile };
     const settings: DashboardTab = { id: 'settings', label: 'Settings', icon: this.tabIcons.settings };
     const invitations: DashboardTab = {
@@ -336,6 +338,8 @@ export class DashboardComponent implements OnInit {
     if (t === UserType.DONOR) {
       return [
         { id: 'events', label: 'Events', icon: this.tabIcons.events },
+        campaigns,
+        projects,
         profile,
         settings
       ];
@@ -343,6 +347,8 @@ export class DashboardComponent implements OnInit {
     if (t === UserType.AMBASSADOR) {
       return [
         { id: 'events', label: 'Events', icon: this.tabIcons.events },
+        campaigns,
+        projects,
         { id: 'volunteering', label: 'Volunteering', icon: this.tabIcons.volunteering },
         invitations,
         profile,
@@ -351,6 +357,8 @@ export class DashboardComponent implements OnInit {
     }
     return [
       { id: 'events', label: 'Events', icon: this.tabIcons.events },
+      campaigns,
+      projects,
       invitations,
       profile,
       settings

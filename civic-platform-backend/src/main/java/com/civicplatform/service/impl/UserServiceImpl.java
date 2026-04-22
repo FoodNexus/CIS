@@ -104,6 +104,10 @@ public class UserServiceImpl implements UserService {
 
         if (userRequest.getUserName() != null) user.setUserName(userRequest.getUserName());
         if (userRequest.getEmail() != null) user.setEmail(userRequest.getEmail());
+        if (userRequest.getUserType() != null) user.setUserType(userRequest.getUserType());
+        if (userRequest.getPassword() != null && !userRequest.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+        }
         if (userRequest.getFirstName() != null) user.setFirstName(userRequest.getFirstName());
         if (userRequest.getLastName() != null) user.setLastName(userRequest.getLastName());
         if (userRequest.getPhone() != null) user.setPhone(userRequest.getPhone());
@@ -112,6 +116,8 @@ public class UserServiceImpl implements UserService {
         if (userRequest.getAssociationName() != null) user.setAssociationName(userRequest.getAssociationName());
         if (userRequest.getContactName() != null) user.setContactName(userRequest.getContactName());
         if (userRequest.getContactEmail() != null) user.setContactEmail(userRequest.getContactEmail());
+        if (userRequest.getBadge() != null) user.setBadge(userRequest.getBadge());
+        if (userRequest.getPoints() != null) user.setPoints(userRequest.getPoints());
         if (userRequest.getBirthDate() != null && !userRequest.getBirthDate().isBlank()) {
             user.setBirthDate(LocalDate.parse(userRequest.getBirthDate()));
         }

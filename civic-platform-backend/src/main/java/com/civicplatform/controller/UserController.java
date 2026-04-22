@@ -9,6 +9,7 @@ import com.civicplatform.repository.EventCitizenInvitationRepository;
 import com.civicplatform.repository.UserRepository;
 import com.civicplatform.security.CurrentUserResolver;
 import com.civicplatform.security.RegularAccountPolicy;
+import com.civicplatform.service.KeycloakUserSyncService;
 import com.civicplatform.service.ProfilePictureStorageService;
 import com.civicplatform.service.QrCodeService;
 import com.civicplatform.service.UserService;
@@ -44,6 +45,7 @@ public class UserController {
     private final EventCitizenInvitationRepository eventCitizenInvitationRepository;
     private final QrCodeService qrCodeService;
     private final ProfilePictureStorageService profilePictureStorageService;
+    private final KeycloakUserSyncService keycloakUserSyncService;
 
     @Operation(summary = "Create a new user")
     @PostMapping
@@ -165,7 +167,8 @@ public class UserController {
     @Operation(summary = "Get user by ID (self, platform admin, or event organizer who invited this citizen)")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id, Authentication authentication) {
-        User authUser = currentUserResolver.resolveRequired(authentication);
+        // Ensure Keycloak-authenticated accounts (including admins) always have a local profile.
+        User authUser = currentUserResolver.resolveOrCreate(authentication);
         if (!authUser.isAdmin() && !authUser.getId().equals(id)) {
             boolean invitedByOrganizer = eventCitizenInvitationRepository.existsByCitizenIdAndEventOrganizerId(
                     id, authUser.getId());
@@ -228,6 +231,14 @@ public class UserController {
     public ResponseEntity<Long> countUsersByType(@PathVariable UserType userType) {
         Long count = userService.countUsersByType(userType);
         return ResponseEntity.ok(count);
+    }
+
+    @Operation(summary = "Run a Keycloak-to-local user sync now")
+    @PostMapping("/admin/sync-keycloak")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<KeycloakUserSyncService.SyncResult> syncUsersFromKeycloak() {
+        KeycloakUserSyncService.SyncResult result = keycloakUserSyncService.syncUsers();
+        return ResponseEntity.ok(result);
     }
 
     private User requireRegularAuthenticatedUser(Authentication authentication) {

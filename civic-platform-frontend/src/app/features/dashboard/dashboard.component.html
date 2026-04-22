@@ -25,6 +25,12 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
+            <a routerLink="/campaigns" class="inline-flex items-center px-4 py-2 border border-emerald-200 rounded-lg text-sm font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100">
+              Campaigns
+            </a>
+            <a routerLink="/posts" class="inline-flex items-center px-4 py-2 border border-emerald-200 rounded-lg text-sm font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100">
+              Posts
+            </a>
             <a *ngIf="canCreateContent()" routerLink="/my-posts" class="inline-flex items-center px-4 py-2 border border-emerald-200 rounded-lg text-sm font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100">
               My posts
             </a>
@@ -119,19 +125,7 @@
               {{ invitationTierLabel(inv.invitationTier) }}
               <span *ngIf="inv.priorityFollowup" class="text-violet-600"> · Priority follow-up</span>
             </p>
-            <p class="text-sm text-gray-700">
-              Composite rate: {{ inv.compositeRate != null ? (inv.compositeRate | number:'1.1-1') : (inv.matchScore | number:'1.0-0') }} / {{ inv.compositeRate != null ? 100 : '—' }}
-            </p>
-            <div class="flex items-center gap-2 mt-2">
-              <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  class="h-2 rounded-full transition-all"
-                  [ngClass]="invitationScoreBarClass(inv.matchScorePercent)"
-                  [style.width.%]="inv.matchScorePercent"
-                ></div>
-              </div>
-              <span class="text-xs text-gray-500 w-12">{{ inv.matchScorePercent | number:'1.0-1' }}%</span>
-            </div>
+            <p class="text-sm text-gray-700">Invitation curated for your profile and activity.</p>
           </div>
           <p class="text-xs text-gray-500 mt-3">
             Invited on: {{ inv.invitedAt | date:'mediumDate' }}

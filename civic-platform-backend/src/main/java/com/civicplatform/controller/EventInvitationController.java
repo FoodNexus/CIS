@@ -6,12 +6,11 @@ import com.civicplatform.entity.EventCitizenInvitation;
 import com.civicplatform.entity.User;
 import com.civicplatform.mapper.EventInvitationMapper;
 import com.civicplatform.repository.EventRepository;
-import com.civicplatform.repository.UserRepository;
+import com.civicplatform.security.CurrentUserResolver;
 import com.civicplatform.service.EventInvitationMatchingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,15 +23,14 @@ public class EventInvitationController {
 
     private final EventInvitationMatchingService eventInvitationMatchingService;
     private final EventInvitationMapper eventInvitationMapper;
-    private final UserRepository userRepository;
     private final EventRepository eventRepository;
+    private final CurrentUserResolver currentUserResolver;
 
     @GetMapping("/events/{eventId}/invitations")
     public ResponseEntity<List<EventInvitationResponse>> getEventInvitations(
             @PathVariable Long eventId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User requester = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User not found"));
+            Authentication authentication) {
+        User requester = currentUserResolver.resolveOrCreate(authentication);
         List<EventCitizenInvitation> matches =
                 eventInvitationMatchingService.getEventInvitations(eventId, requester.getId());
         return ResponseEntity.ok(
@@ -42,9 +40,8 @@ public class EventInvitationController {
 
     @GetMapping("/my-invitations")
     public ResponseEntity<List<EventInvitationResponse>> getMyInvitations(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User not found"));
+            Authentication authentication) {
+        User user = currentUserResolver.resolveOrCreate(authentication);
         return ResponseEntity.ok(
                 eventInvitationMatchingService.getMyInvitations(user.getId())
                         .stream().map(eventInvitationMapper::toResponse).toList()
@@ -74,9 +71,8 @@ public class EventInvitationController {
     @PostMapping("/events/{eventId}/rematch")
     public ResponseEntity<List<EventInvitationResponse>> triggerMatching(
             @PathVariable Long eventId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User requester = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User not found"));
+            Authentication authentication) {
+        User requester = currentUserResolver.resolveOrCreate(authentication);
         if (!requester.isAdmin()) {
             Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Event not found"));

@@ -54,6 +54,7 @@ public class CurrentUserResolver {
     private User resolveFromJwt(Jwt jwt, boolean createIfMissing) {
         String keycloakId = jwt.getSubject();
         String email = normalizeEmail(jwt.getClaimAsString("email"));
+        boolean tokenAdmin = hasAdminRole(jwt);
 
         Optional<User> byKeycloakId = isPresent(keycloakId)
                 ? userRepository.findByKeycloakId(keycloakId)
@@ -64,8 +65,23 @@ public class CurrentUserResolver {
 
         User resolved = byKeycloakId.or(() -> byEmail).orElse(null);
         if (resolved != null) {
+            boolean changed = false;
             if (isPresent(keycloakId) && !keycloakId.equals(resolved.getKeycloakId())) {
                 resolved.setKeycloakId(keycloakId);
+                changed = true;
+            }
+            // Keep local platform-admin flag aligned with Keycloak realm role.
+            if (resolved.isAdmin() != tokenAdmin) {
+                resolved.setAdmin(tokenAdmin);
+                // Admin accounts don't use regular participant lifecycle.
+                if (tokenAdmin) {
+                    resolved.setUserType(null);
+                } else if (resolved.getUserType() == null) {
+                    resolved.setUserType(UserType.CITIZEN);
+                }
+                changed = true;
+            }
+            if (changed) {
                 resolved = userRepository.save(resolved);
             }
             return resolved;
@@ -86,8 +102,8 @@ public class CurrentUserResolver {
                 .userName(generateUniqueUsername(preferredUsername))
                 .email(email)
                 .password(passwordEncoder.encode("EXTERNAL_AUTH_" + UUID.randomUUID()))
-                .admin(hasAdminRole(jwt))
-                .userType(hasAdminRole(jwt) ? null : UserType.CITIZEN)
+                .admin(tokenAdmin)
+                .userType(tokenAdmin ? null : UserType.CITIZEN)
                 .badge(Badge.NONE)
                 .points(0)
                 .firstName(givenName)

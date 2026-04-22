@@ -2,7 +2,7 @@ package com.civicplatform.controller;
 
 import com.civicplatform.dto.response.NotificationResponse;
 import com.civicplatform.entity.User;
-import com.civicplatform.repository.UserRepository;
+import com.civicplatform.security.CurrentUserResolver;
 import com.civicplatform.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,7 +23,7 @@ import java.util.Map;
 public class NotificationController {
 
     private final NotificationService notificationService;
-    private final UserRepository userRepository;
+    private final CurrentUserResolver currentUserResolver;
 
     @Operation(summary = "List notifications (newest first)")
     @GetMapping
@@ -61,8 +61,7 @@ public class NotificationController {
     }
 
     private User getUser(Authentication authentication) {
-        String email = authentication.getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Ensure a local profile exists for Keycloak-authenticated users.
+        return currentUserResolver.resolveOrCreate(authentication);
     }
 }

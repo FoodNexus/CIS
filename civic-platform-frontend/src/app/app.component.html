@@ -271,6 +271,16 @@
            [class.md:justify-center]="sidebarCollapsed" [class.md:gap-0]="sidebarCollapsed">
           <span class="truncate max-md:inline" [class.md:hidden]="sidebarCollapsed">Events</span>
         </a>
+        <a routerLink="/campaigns" routerLinkActive="bg-emerald-50 text-emerald-900 border-emerald-600 shadow-sm font-semibold" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
+           [class.md:justify-center]="sidebarCollapsed" [class.md:gap-0]="sidebarCollapsed">
+          <span class="truncate max-md:inline" [class.md:hidden]="sidebarCollapsed">Campaigns</span>
+        </a>
+        <a routerLink="/posts" routerLinkActive="bg-emerald-50 text-emerald-900 border-emerald-600 shadow-sm font-semibold" (click)="closeMobileMenu()"
+           class="flex items-center gap-3 px-2 py-2.5 rounded-r-lg text-sm font-medium border-l-4 border-transparent text-gray-600 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
+           [class.md:justify-center]="sidebarCollapsed" [class.md:gap-0]="sidebarCollapsed">
+          <span class="truncate max-md:inline" [class.md:hidden]="sidebarCollapsed">Posts</span>
+        </a>
       </nav>
     </aside>
 

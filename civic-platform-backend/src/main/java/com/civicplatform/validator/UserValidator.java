@@ -20,14 +20,6 @@ public class UserValidator implements ConstraintValidator<ValidUser, UserRequest
 
         boolean isValid = true;
 
-        if (userRequest.getUserType() != UserType.CITIZEN && userRequest.getUserType() != UserType.DONOR) {
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("Only CITIZEN and DONOR can register directly")
-                   .addPropertyNode("userType")
-                   .addConstraintViolation();
-            return false;
-        }
-
         if (userRequest.getUserType() == UserType.DONOR) {
             if (isBlank(userRequest.getAssociationName())) {
                 context.disableDefaultConstraintViolation();

@@ -8,7 +8,7 @@ import com.civicplatform.dto.response.EventResponse;
 import com.civicplatform.entity.User;
 import com.civicplatform.enums.EventStatus;
 import com.civicplatform.enums.UserType;
-import com.civicplatform.repository.UserRepository;
+import com.civicplatform.security.CurrentUserResolver;
 import com.civicplatform.security.RegularAccountPolicy;
 import com.civicplatform.service.CertificateService;
 import com.civicplatform.service.EventService;
@@ -35,7 +35,7 @@ public class EventController {
 
     private final EventService eventService;
     private final CertificateService certificateService;
-    private final UserRepository userRepository;
+    private final CurrentUserResolver currentUserResolver;
 
     @Operation(summary = "Create a new event")
     @PostMapping
@@ -213,8 +213,6 @@ public class EventController {
     }
 
     private User getUserFromAuthentication(Authentication authentication) {
-        String email = authentication.getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+        return currentUserResolver.resolveOrCreate(authentication);
     }
 }

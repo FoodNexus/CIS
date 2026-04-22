@@ -24,8 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -78,8 +80,8 @@ public class EventInvitationMatchingService {
 
     @Transactional
     public List<EventCitizenInvitation> forceMatchCitizensForEvent(Long eventId) {
-        eventCitizenInvitationRepository.deleteByEventId(eventId);
-        eventCitizenInvitationRepository.flush();
+        // Re-run scoring without deleting existing invitation rows.
+        // This preserves citizen responses (ACCEPTED / DECLINED) across profile updates and rematches.
         return runMatching(eventId);
     }
 
@@ -136,13 +138,37 @@ public class EventInvitationMatchingService {
         List<InvitationScoreRow> toInvite = selectDirectInvitees(ranked, event);
         List<EventCitizenInvitation> saved = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
+        List<EventCitizenInvitation> existingRows = eventCitizenInvitationRepository.findByEventId(eventId);
+        Map<Long, EventCitizenInvitation> byCitizenId = new HashMap<>();
+        for (EventCitizenInvitation row : existingRows) {
+            if (row.getCitizen() != null && row.getCitizen().getId() != null) {
+                byCitizenId.put(row.getCitizen().getId(), row);
+            }
+        }
+
+        // Refresh scores for already invited citizens to keep ranking data current while preserving status.
+        for (InvitationScoreRow row : ranked) {
+            EventCitizenInvitation existing = byCitizenId.get(row.citizen().getId());
+            if (existing == null) {
+                continue;
+            }
+            existing.setMatchScore(row.snapshot().getRawTotal());
+            existing.setCompositeRate(row.snapshot().getCompositeRate());
+            existing.setPriorityFollowup(row.decision().isPriorityFollowup());
+            existing.setFeatureBreakdownJson(toFeatureJson(row.snapshot()));
+            // Keep invitation tier coherent for direct invites but never downgrade an accepted/declined row to nurture.
+            if (row.decision().getTier() != InvitationTier.NURTURE_ALTERNATIVE) {
+                existing.setInvitationTier(row.decision().getTier());
+            }
+            saved.add(eventCitizenInvitationRepository.save(existing));
+        }
 
         for (InvitationScoreRow row : toInvite) {
             User citizen = row.citizen();
             CitizenRateSnapshot snapshot = row.snapshot();
             InvitationRateDecision decision = row.decision();
 
-            if (eventCitizenInvitationRepository.existsByEvent_IdAndCitizen_Id(eventId, citizen.getId())) {
+            if (byCitizenId.containsKey(citizen.getId())) {
                 continue;
             }
 
@@ -193,8 +219,8 @@ public class EventInvitationMatchingService {
             }
         }
 
-        log.info("Citizen invitation matching for event {}: {} invitation row(s) saved", eventId, saved.size());
-        return saved;
+        log.info("Citizen invitation matching for event {}: {} invitation row(s) upserted", eventId, saved.size());
+        return eventCitizenInvitationRepository.findByEventIdOrderByScoreDesc(eventId);
     }
 
     /**

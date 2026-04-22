@@ -1,15 +1,25 @@
 function resolveApiBaseUrl(): string {
+  const fallback = 'http://localhost:8081/api';
   try {
     if (typeof localStorage !== 'undefined') {
       const o = localStorage.getItem('api_base_url');
       if (o?.trim()) {
-        return o.trim().replace(/\/$/, '');
+        const normalized = o.trim().replace(/\/$/, '');
+        // Auto-migrate the old local dev URL to the current backend port.
+        if (/^http:\/\/localhost:8082\/api$/i.test(normalized)) {
+          localStorage.setItem('api_base_url', fallback);
+          return fallback;
+        }
+        // Keep only valid API base URLs ending with /api.
+        if (/^https?:\/\/[^/\s]+\/api$/i.test(normalized)) {
+          return normalized;
+        }
       }
     }
   } catch {
     /* ignore */
   }
-  return 'http://localhost:8081/api';
+  return fallback;
 }
 
 export const environment = {
