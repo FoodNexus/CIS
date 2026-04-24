@@ -85,7 +85,8 @@ public abstract class EventInvitationMapper {
             r.setMatchScorePercent(Math.round(pct * 10.0) / 10.0);
         }
         if (invitation.getCitizen() != null) {
-            r.setCitizenEventsAttended(eventParticipantRepository.countCompletedByUserId(invitation.getCitizen().getId()));
+            long attended = eventParticipantRepository.countReliableAttendanceByUserId(invitation.getCitizen().getId());
+            r.setCitizenEventsAttended(attended > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) attended);
         }
     }
 }

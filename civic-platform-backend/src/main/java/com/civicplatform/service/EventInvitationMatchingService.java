@@ -12,6 +12,7 @@ import com.civicplatform.enums.UserType;
 import com.civicplatform.repository.EventCitizenInvitationRepository;
 import com.civicplatform.repository.EventRepository;
 import com.civicplatform.repository.UserRepository;
+import com.civicplatform.service.dto.InvitationCandidateSnapshot;
 import com.civicplatform.util.FoodCommunityContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
@@ -51,6 +52,7 @@ public class EventInvitationMatchingService {
     private final NotificationService notificationService;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private final EventInvitationStatsService eventInvitationStatsService;
 
     @Value("${app.public-base-url:http://localhost:8082/api}")
     private String publicBaseUrl;
@@ -86,6 +88,7 @@ public class EventInvitationMatchingService {
     }
 
     private List<EventCitizenInvitation> runMatching(Long eventId) {
+        long startedAtNs = System.nanoTime();
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
         Long organizerId = event.getOrganizerId();
@@ -218,6 +221,20 @@ public class EventInvitationMatchingService {
                         baseFrontend + "/dashboard?tab=invitations");
             }
         }
+
+        Set<Long> directInviteCitizenIds = toInvite.stream().map(i -> i.citizen().getId()).collect(java.util.stream.Collectors.toSet());
+        List<InvitationCandidateSnapshot> snapshots = ranked.stream().map(row -> InvitationCandidateSnapshot.builder()
+                .citizenId(row.citizen().getId())
+                .citizenName(row.citizen().getUserName())
+                .citizenUserType(row.citizen().getUserType())
+                .compositeRate(row.snapshot().getCompositeRate())
+                .rawScore(row.snapshot().getRawTotal())
+                .invitationTier(row.decision().getTier())
+                .priorityFollowup(row.decision().isPriorityFollowup())
+                .directInvite(directInviteCitizenIds.contains(row.citizen().getId()))
+                .build()).toList();
+        long durationMs = (System.nanoTime() - startedAtNs) / 1_000_000L;
+        eventInvitationStatsService.persistRun(event, snapshots, durationMs);
 
         log.info("Citizen invitation matching for event {}: {} invitation row(s) upserted", eventId, saved.size());
         return eventCitizenInvitationRepository.findByEventIdOrderByScoreDesc(eventId);

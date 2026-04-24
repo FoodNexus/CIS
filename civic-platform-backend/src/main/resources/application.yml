@@ -94,6 +94,15 @@ app:
       min-direct-invites: ${INVITE_FOOD_MIN_DIRECT:5}
       sms-followup-threshold: ${INVITE_FOOD_SMS_THRESHOLD:85.0}
       solidarity-campaign-ids: ${INVITE_FOOD_SOLIDARITY_CAMPAIGN_IDS:97001,97002,97003}
+  events:
+    min-lead-hours: ${EVENT_MIN_LEAD_HOURS:3}
+  observability:
+    slow-threshold-ms: ${APP_SLOW_THRESHOLD_MS:600}
+  ml:
+    retrain:
+      enabled: ${ML_RETRAIN_ENABLED:true}
+      initial-delay-ms: ${ML_RETRAIN_INITIAL_DELAY_MS:60000}
+      interval-ms: ${ML_RETRAIN_INTERVAL_MS:21600000}
   upload:
     profile-dir: ${user.home}/.civic-platform/uploads/profile
     post-media-dir: ${user.home}/.civic-platform/uploads/post-media

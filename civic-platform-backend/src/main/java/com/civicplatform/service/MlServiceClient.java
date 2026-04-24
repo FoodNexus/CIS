@@ -57,6 +57,7 @@ public class MlServiceClient {
             restTemplate.postForEntity(mlServiceUrl + "/retrain", null, Object.class);
         } catch (Exception e) {
             log.warn("Could not trigger ML retrain: {}", e.getMessage());
+            throw e;
         }
     }
 

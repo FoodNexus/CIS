@@ -15,7 +15,12 @@ import com.civicplatform.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +37,7 @@ import java.util.List;
 @RequestMapping("/events")
 @RequiredArgsConstructor
 @Tag(name = "Event Management", description = "Event management APIs")
+@Validated
 public class EventController {
 
     private final EventService eventService;
@@ -88,6 +95,21 @@ public class EventController {
     @GetMapping
     public ResponseEntity<List<EventResponse>> getAllEvents() {
         List<EventResponse> response = eventService.getAllEvents();
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Paginated event search with constrained JQL-like filtering.
+     * Example: {@code status = UPCOMING AND type = FORMATION AND title ~ 'food'}.
+     */
+    @Operation(summary = "Search events with pagination and JQL-like filters")
+    @GetMapping("/search")
+    public ResponseEntity<Page<EventResponse>> searchEvents(
+            @RequestParam(required = false) String jql,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(200) int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<EventResponse> response = eventService.searchEvents(jql, pageable);
         return ResponseEntity.ok(response);
     }
 

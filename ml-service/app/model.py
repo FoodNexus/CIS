@@ -158,7 +158,7 @@ class RecommendationModel:
             user_votes_df[user_votes_df["user_id"] == user_id]["campaign_id"]
             .tolist()
         )
-
+                           
         scores = []
         now = datetime.now()
 

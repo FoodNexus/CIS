@@ -19,9 +19,13 @@ import com.civicplatform.enums.InteractionAction;
 import com.civicplatform.enums.InteractionEntityType;
 import com.civicplatform.service.EventInvitationMatchingAsyncRunner;
 import com.civicplatform.service.EventLifecycleService;
+import com.civicplatform.service.EventSearchService;
 import com.civicplatform.service.EventService;
 import com.civicplatform.service.UserInteractionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -44,12 +48,17 @@ public class EventServiceImpl implements EventService {
     private final EventLifecycleService eventLifecycleService;
     private final EventInvitationMatchingAsyncRunner eventInvitationMatchingAsyncRunner;
     private final UserInteractionService userInteractionService;
+    private final EventSearchService eventSearchService;
+
+    @Value("${app.events.min-lead-hours:3}")
+    private int minLeadHours;
 
     @Override
     @Transactional
     public EventResponse createEvent(EventRequest eventRequest, Long organizerId) {
         User organizer = userRepository.findById(organizerId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + organizerId));
+        validateEventDate(eventRequest.getDate());
 
         Event event = eventMapper.toEntity(eventRequest);
         event.setOrganizerId(organizerId);
@@ -110,10 +119,16 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public Page<EventResponse> searchEvents(String jql, Pageable pageable) {
+        return eventSearchService.search(jql, pageable).map(eventMapper::toResponse);
+    }
+
+    @Override
     @Transactional
     public EventResponse updateEvent(Long id, EventRequest eventRequest) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
+        validateEventDate(eventRequest.getDate());
 
         eventMapper.updateEntity(eventRequest, event);
         event = eventRepository.save(event);
@@ -323,5 +338,23 @@ public class EventServiceImpl implements EventService {
                         .registered(false)
                         .status(null)
                         .build());
+    }
+
+    private void validateEventDate(String rawDate) {
+        if (rawDate == null || rawDate.isBlank()) {
+            throw new IllegalStateException("Event date is required.");
+        }
+        final LocalDateTime parsed;
+        try {
+            parsed = LocalDateTime.parse(rawDate);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Invalid event date format. Please use a valid date and time.");
+        }
+        LocalDateTime minAllowed = LocalDateTime.now().plusHours(Math.max(1, minLeadHours));
+        if (parsed.isBefore(minAllowed)) {
+            throw new IllegalStateException(
+                    "Event date must be at least " + Math.max(1, minLeadHours) + " hour(s) in the future."
+            );
+        }
     }
 }

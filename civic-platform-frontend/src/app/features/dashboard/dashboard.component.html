@@ -317,6 +317,9 @@
                 {{ event.date | date:'mediumDate' }}
               </div>
             </div>
+            <a [routerLink]="['/events', event.id]" class="mt-3 inline-block text-sm font-semibold text-emerald-700 hover:text-emerald-900">
+              Open event →
+            </a>
           </div>
         </div>
         <div *ngIf="myEvents.length === 0" class="col-span-full text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">

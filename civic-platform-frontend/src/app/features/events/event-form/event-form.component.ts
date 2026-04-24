@@ -11,6 +11,7 @@ import { EventsService, EventType } from '@core/services/events.service';
   templateUrl: './event-form.component.html'
 })
 export class EventFormComponent implements OnInit {
+  private readonly minLeadHours = 3;
   eventForm: FormGroup;
   eventTypes = Object.values(EventType);
   isEdit = false;
@@ -100,6 +101,11 @@ export class EventFormComponent implements OnInit {
       this.eventForm.markAllAsTouched();
       return;
     }
+    const localDateValue = this.eventForm.get('date')?.value as string;
+    if (!this.isDateWithLeadTimeValid(localDateValue)) {
+      this.errorMessage = `Event date must be at least ${this.minLeadHours} hours in the future.`;
+      return;
+    }
     const raw = this.eventForm.value;
     const payload = {
       title: raw.title,
@@ -120,7 +126,7 @@ export class EventFormComponent implements OnInit {
           this.router.navigate(this.isAdminRoute() ? ['/admin/events', this.eventId] : ['/events', this.eventId]);
         },
         error: (err) => {
-          this.errorMessage = err.error?.message || 'Could not update event';
+          this.errorMessage = this.extractApiError(err, 'Could not update event');
           this.submitLoading = false;
         }
       });
@@ -131,7 +137,7 @@ export class EventFormComponent implements OnInit {
           this.router.navigate(this.isAdminRoute() ? ['/admin/events', ev.id] : ['/events', ev.id]);
         },
         error: (err) => {
-          this.errorMessage = err.error?.message || 'Could not create event';
+          this.errorMessage = this.extractApiError(err, 'Could not create event');
           this.submitLoading = false;
         }
       });
@@ -140,5 +146,30 @@ export class EventFormComponent implements OnInit {
 
   cancel(): void {
     this.router.navigateByUrl(this.eventsListPath());
+  }
+
+  private isDateWithLeadTimeValid(dateValue: string): boolean {
+    if (!dateValue) {
+      return false;
+    }
+    const selected = new Date(dateValue);
+    if (Number.isNaN(selected.getTime())) {
+      return false;
+    }
+    const minAllowed = new Date(Date.now() + this.minLeadHours * 60 * 60 * 1000);
+    return selected.getTime() >= minAllowed.getTime();
+  }
+
+  private extractApiError(err: any, fallback: string): string {
+    if (err?.error?.errors && typeof err.error.errors === 'object') {
+      const first = Object.values(err.error.errors)[0];
+      if (typeof first === 'string' && first.trim()) {
+        return first;
+      }
+    }
+    if (typeof err?.error?.message === 'string' && err.error.message.trim()) {
+      return err.error.message;
+    }
+    return fallback;
   }
 }
