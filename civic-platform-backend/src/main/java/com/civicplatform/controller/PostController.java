@@ -29,7 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestController
-@RequestMapping("/posts")
+@RequestMapping({"/posts", "/v1/posts"})
 @RequiredArgsConstructor
 @Tag(name = "Post Management", description = "Post management APIs")
 public class PostController {
@@ -94,6 +94,16 @@ public class PostController {
     public ResponseEntity<List<PostResponse>> getAllPosts() {
         List<PostResponse> response = postService.getAllPosts();
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get post feed sorted by deterministic score")
+    @GetMapping("/feed")
+    public ResponseEntity<List<PostResponse>> getFeed(
+            @RequestParam(name = "sort", defaultValue = "recent") String sort) {
+        if ("popularity".equalsIgnoreCase(sort)) {
+            return ResponseEntity.ok(postService.getFeedByPopularity());
+        }
+        return ResponseEntity.ok(postService.getAllPosts());
     }
 
     @Operation(summary = "Get current user's posts")

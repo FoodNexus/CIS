@@ -21,8 +21,10 @@ import com.civicplatform.service.EventInvitationMatchingAsyncRunner;
 import com.civicplatform.service.EventLifecycleService;
 import com.civicplatform.service.EventSearchService;
 import com.civicplatform.service.EventService;
+import com.civicplatform.service.ScoringProperties;
 import com.civicplatform.service.UserInteractionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +39,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class EventServiceImpl implements EventService {
 
@@ -49,6 +52,7 @@ public class EventServiceImpl implements EventService {
     private final EventInvitationMatchingAsyncRunner eventInvitationMatchingAsyncRunner;
     private final UserInteractionService userInteractionService;
     private final EventSearchService eventSearchService;
+    private final ScoringProperties scoringProperties;
 
     @Value("${app.events.min-lead-hours:3}")
     private int minLeadHours;
@@ -91,6 +95,45 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findAll();
         return events.stream()
                 .map(eventMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns events sorted by deterministic popularity score.
+     */
+    @Override
+    public List<EventResponse> getFeedByPopularity() {
+        ScoringProperties.EventPopularity cfg = scoringProperties.getEventPopularity();
+        List<Event> events = eventRepository.findAll();
+        LocalDateTime now = LocalDateTime.now();
+        record EventWithScore(Event event, double score) {}
+        List<EventWithScore> scored = events.stream()
+                .map(event -> new EventWithScore(event, calculatePopularityScore(event, now, cfg)))
+                .toList();
+
+        return scored.stream()
+                .sorted((left, right) -> {
+                    int byScore = Double.compare(right.score(), left.score());
+                    if (byScore != 0) {
+                        return byScore;
+                    }
+                    Event leftEvent = left.event();
+                    Event rightEvent = right.event();
+                    LocalDateTime leftDate = leftEvent.getDate() == null ? LocalDateTime.MAX : leftEvent.getDate();
+                    LocalDateTime rightDate = rightEvent.getDate() == null ? LocalDateTime.MAX : rightEvent.getDate();
+                    int byStartDate = leftDate.compareTo(rightDate);
+                    if (byStartDate != 0) {
+                        return byStartDate;
+                    }
+                    LocalDateTime rightCreatedAt = rightEvent.getCreatedAt() == null ? LocalDateTime.MIN : rightEvent.getCreatedAt();
+                    LocalDateTime leftCreatedAt = leftEvent.getCreatedAt() == null ? LocalDateTime.MIN : leftEvent.getCreatedAt();
+                    return rightCreatedAt.compareTo(leftCreatedAt);
+                })
+                .map(item -> {
+                    EventResponse response = eventMapper.toResponse(item.event());
+                    response.setPopularityScore(item.score());
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -356,5 +399,40 @@ public class EventServiceImpl implements EventService {
                     "Event date must be at least " + Math.max(1, minLeadHours) + " hour(s) in the future."
             );
         }
+    }
+
+    private double calculatePopularityScore(Event event, LocalDateTime now, ScoringProperties.EventPopularity cfg) {
+        long currentParticipants = event.getCurrentParticipants() == null ? 0L : event.getCurrentParticipants();
+        long maxParticipants = event.getMaxCapacity() == null ? 0L : event.getMaxCapacity();
+        double inscriptionRate = (double) currentParticipants / Math.max(1.0d, maxParticipants);
+        double organizerReliability = calculateOrganizerReliability(event.getOrganizerId(), now, cfg.getHistoryDays());
+        long daysUntilEvent = event.getDate() == null ? Long.MAX_VALUE
+                : Math.max(0L, java.time.Duration.between(now, event.getDate()).toDays());
+        double urgencyBoost = 1.0d / (daysUntilEvent + 1.0d);
+
+        double score = (inscriptionRate * cfg.getWeightInscriptionRate())
+                + (organizerReliability * cfg.getWeightOrganizerReliability())
+                + (urgencyBoost * cfg.getWeightUrgency());
+        log.debug("event={} inscriptionRate={} organizerReliability={} urgencyBoost={} score={}",
+                event.getId(), inscriptionRate, organizerReliability, urgencyBoost, score);
+        return score;
+    }
+
+    private double calculateOrganizerReliability(Long organizerId, LocalDateTime now, int historyDays) {
+        if (organizerId == null) {
+            return 0.0d;
+        }
+        LocalDateTime from = now.minusDays(Math.max(1, historyDays));
+        List<Event> history = eventRepository.findByOrganizerIdAndDateBetween(organizerId, from, now);
+        if (history.isEmpty()) {
+            return 0.0d;
+        }
+        double sumRates = 0.0d;
+        for (Event e : history) {
+            long participants = e.getCurrentParticipants() == null ? 0L : e.getCurrentParticipants();
+            long capacity = e.getMaxCapacity() == null ? 0L : e.getMaxCapacity();
+            sumRates += ((double) participants / Math.max(1.0d, capacity));
+        }
+        return sumRates / history.size();
     }
 }

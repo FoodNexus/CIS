@@ -17,6 +17,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     
     void deleteByPostId(Long postId);
 
+    long countByPostId(Long postId);
+
     @Query("SELECT COUNT(c) FROM Comment c JOIN c.post p WHERE c.author.id = :userId AND ("
             + "LOWER(COALESCE(p.content,'')) LIKE '%recipe%' OR LOWER(COALESCE(p.content,'')) LIKE '%cooking%' OR "
             + "LOWER(COALESCE(p.content,'')) LIKE '%food%' OR LOWER(COALESCE(p.content,'')) LIKE '%leftover%')")

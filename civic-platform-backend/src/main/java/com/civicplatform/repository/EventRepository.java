@@ -35,6 +35,8 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
     
     @Query("SELECT e FROM Event e WHERE e.date <= :now AND e.status = 'UPCOMING'")
     List<Event> findEventsThatShouldStart(LocalDateTime now);
+
+    List<Event> findByOrganizerIdAndDateBetween(Long organizerId, LocalDateTime from, LocalDateTime to);
     
     @Query("SELECT COUNT(e) FROM Event e WHERE e.status = :status")
     long countByStatus(EventStatus status);

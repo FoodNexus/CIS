@@ -107,6 +107,24 @@ app:
     profile-dir: ${user.home}/.civic-platform/uploads/profile
     post-media-dir: ${user.home}/.civic-platform/uploads/post-media
     comment-media-dir: ${user.home}/.civic-platform/uploads/comment-media
+  scoring:
+    post-engagement:
+      weight-likes: ${POST_ENGAGEMENT_WEIGHT_LIKES:2.0}
+      weight-comments: ${POST_ENGAGEMENT_WEIGHT_COMMENTS:3.0}
+      weight-shares: ${POST_ENGAGEMENT_WEIGHT_SHARES:4.0}
+    event-popularity:
+      weight-inscription-rate: ${EVENT_POPULARITY_WEIGHT_INSCRIPTION_RATE:0.4}
+      weight-organizer-reliability: ${EVENT_POPULARITY_WEIGHT_ORGANIZER_RELIABILITY:0.3}
+      weight-urgency: ${EVENT_POPULARITY_WEIGHT_URGENCY:0.3}
+      history-days: ${EVENT_POPULARITY_HISTORY_DAYS:90}
+    ambassador-influence:
+      weight-event: ${AMBASSADOR_INFLUENCE_WEIGHT_EVENT:2.0}
+      weight-post: ${AMBASSADOR_INFLUENCE_WEIGHT_POST:3.0}
+      weight-engagement: ${AMBASSADOR_INFLUENCE_WEIGHT_ENGAGEMENT:0.5}
+      weight-referral: ${AMBASSADOR_INFLUENCE_WEIGHT_REFERRAL:5.0}
+      badge-local: ${AMBASSADOR_INFLUENCE_BADGE_LOCAL:10}
+      badge-regional: ${AMBASSADOR_INFLUENCE_BADGE_REGIONAL:25}
+      badge-national: ${AMBASSADOR_INFLUENCE_BADGE_NATIONAL:50}
 
 ml:
   service:

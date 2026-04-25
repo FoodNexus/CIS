@@ -30,6 +30,8 @@ public class EventResponse {
     private LocalDateTime createdAt;
     /** Set when this event is returned from the ML recommendation feed. */
     private Boolean isRecommended;
+    /** Deterministic score used when feed is sorted by popularity. */
+    private Double popularityScore;
     private List<EventParticipantResponse> participants;
     
     // Helper methods

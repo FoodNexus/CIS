@@ -27,6 +27,8 @@ public class PostResponse {
     private String campaignName;
     /** Set when this post is returned from the ML recommendation feed. */
     private Boolean isRecommended;
+    /** Deterministic score used when feed is sorted by popularity. */
+    private Double engagementScore;
     private List<CommentResponse> comments;
     private List<MediaAttachmentDto> attachments;
 }

@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/events")
+@RequestMapping({"/events", "/v1/events"})
 @RequiredArgsConstructor
 @Tag(name = "Event Management", description = "Event management APIs")
 @Validated
@@ -96,6 +96,16 @@ public class EventController {
     public ResponseEntity<List<EventResponse>> getAllEvents() {
         List<EventResponse> response = eventService.getAllEvents();
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get event feed with deterministic sorting")
+    @GetMapping("/feed")
+    public ResponseEntity<List<EventResponse>> getEventsFeed(
+            @RequestParam(name = "sort", defaultValue = "recent") String sort) {
+        if ("popularity".equalsIgnoreCase(sort)) {
+            return ResponseEntity.ok(eventService.getFeedByPopularity());
+        }
+        return ResponseEntity.ok(eventService.getAllEvents());
     }
 
     /**

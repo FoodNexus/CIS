@@ -14,6 +14,7 @@ public interface EventService {
     EventResponse createEvent(EventRequest eventRequest, Long organizerId);
     EventResponse getEventById(Long id);
     List<EventResponse> getAllEvents();
+    List<EventResponse> getFeedByPopularity();
     List<EventResponse> getEventsByStatus(EventStatus status);
     List<EventResponse> getEventsByOrganizer(Long organizerId);
     List<EventResponse> getUpcomingEvents();

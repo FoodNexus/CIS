@@ -13,6 +13,7 @@ public interface PostService {
     PostResponse createPostWithMedia(String content, PostType type, Long campaignId, List<MultipartFile> files, Long authorId);
     PostResponse getPostById(Long id);
     List<PostResponse> getAllPosts();
+    List<PostResponse> getFeedByPopularity();
 
     List<PostResponse> getPostsByCreator(String creator);
     List<PostResponse> getPostsByStatus(PostStatus status);

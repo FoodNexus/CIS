@@ -13,6 +13,7 @@ import com.civicplatform.repository.UserRepository;
 import com.civicplatform.service.EventInvitationMatchingAsyncRunner;
 import com.civicplatform.service.EventLifecycleService;
 import com.civicplatform.service.EventSearchService;
+import com.civicplatform.service.ScoringProperties;
 import com.civicplatform.service.UserInteractionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,11 +23,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,6 +46,7 @@ class EventServiceImplTest {
     @Mock private EventInvitationMatchingAsyncRunner matchingAsyncRunner;
     @Mock private UserInteractionService userInteractionService;
     @Mock private EventSearchService eventSearchService;
+    @Mock private ScoringProperties scoringProperties;
 
     private EventServiceImpl service;
 
@@ -57,7 +61,8 @@ class EventServiceImplTest {
                 eventLifecycleService,
                 matchingAsyncRunner,
                 userInteractionService,
-                eventSearchService
+                eventSearchService,
+                scoringProperties
         );
         ReflectionTestUtils.setField(service, "minLeadHours", 3);
     }
@@ -98,5 +103,44 @@ class EventServiceImplTest {
 
         assertEquals(22L, out.getId());
         verify(eventRepository).save(mapped);
+    }
+
+    @Test
+    void popularityScore_handlesZeroCapacityAndMissingHistory() {
+        Event e1 = Event.builder()
+                .id(1L)
+                .organizerId(100L)
+                .currentParticipants(0)
+                .maxCapacity(0)
+                .date(LocalDateTime.now().plusDays(5))
+                .createdAt(LocalDateTime.now().minusDays(1))
+                .build();
+        Event e2 = Event.builder()
+                .id(2L)
+                .organizerId(101L)
+                .currentParticipants(0)
+                .maxCapacity(0)
+                .date(LocalDateTime.now().plusDays(7))
+                .createdAt(LocalDateTime.now().minusDays(1))
+                .build();
+
+        ScoringProperties.EventPopularity cfg = new ScoringProperties.EventPopularity();
+        cfg.setWeightInscriptionRate(0.4);
+        cfg.setWeightOrganizerReliability(0.3);
+        cfg.setWeightUrgency(0.3);
+        cfg.setHistoryDays(90);
+        when(scoringProperties.getEventPopularity()).thenReturn(cfg);
+        when(eventRepository.findAll()).thenReturn(List.of(e1, e2));
+        when(eventRepository.findByOrganizerIdAndDateBetween(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(List.of());
+        when(eventMapper.toResponse(any(Event.class))).thenAnswer(invocation -> {
+            Event e = invocation.getArgument(0);
+            return EventResponse.builder().id(e.getId()).date(e.getDate()).createdAt(e.getCreatedAt()).build();
+        });
+
+        List<EventResponse> out = service.getFeedByPopularity();
+        assertEquals(2, out.size());
+        assertEquals(1L, out.get(0).getId());
+        org.junit.jupiter.api.Assertions.assertNotNull(out.get(0).getPopularityScore());
     }
 }

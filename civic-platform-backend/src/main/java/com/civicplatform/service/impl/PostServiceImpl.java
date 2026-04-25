@@ -12,24 +12,30 @@ import com.civicplatform.enums.PostStatus;
 import com.civicplatform.enums.PostType;
 import com.civicplatform.mapper.PostMapper;
 import com.civicplatform.repository.CampaignRepository;
+import com.civicplatform.repository.CommentRepository;
 import com.civicplatform.repository.PostAttachmentRepository;
 import com.civicplatform.repository.PostRepository;
 import com.civicplatform.repository.UserRepository;
 import com.civicplatform.service.NotificationService;
 import com.civicplatform.service.PostMediaStorageService;
 import com.civicplatform.service.PostService;
+import com.civicplatform.service.ScoringProperties;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PostServiceImpl implements PostService {
@@ -39,10 +45,12 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final CampaignRepository campaignRepository;
+    private final CommentRepository commentRepository;
     private final PostMapper postMapper;
     private final PostAttachmentRepository postAttachmentRepository;
     private final PostMediaStorageService postMediaStorageService;
     private final NotificationService notificationService;
+    private final ScoringProperties scoringProperties;
 
     @Override
     @Transactional(readOnly = false)
@@ -136,6 +144,47 @@ public class PostServiceImpl implements PostService {
         return mapPostsWithAttachments(posts);
     }
 
+    /**
+     * Returns posts sorted by deterministic engagement popularity score.
+     */
+    @Override
+    public List<PostResponse> getFeedByPopularity() {
+        ScoringProperties.PostEngagement cfg = scoringProperties.getPostEngagement();
+        List<Post> posts = postRepository.findAll();
+        record PostWithScore(Post post, double score) {}
+        List<PostWithScore> scored = posts.stream()
+                .map(post -> new PostWithScore(post, calculateEngagementScore(post, cfg)))
+                .toList();
+
+        return scored.stream()
+                .sorted((left, right) -> {
+                    int byScore = Double.compare(right.score(), left.score());
+                    if (byScore != 0) {
+                        return byScore;
+                    }
+                    Post rightPost = right.post();
+                    Post leftPost = left.post();
+                    LocalDateTime rightCreated = rightPost.getCreatedAt() == null ? LocalDateTime.MIN : rightPost.getCreatedAt();
+                    LocalDateTime leftCreated = leftPost.getCreatedAt() == null ? LocalDateTime.MIN : leftPost.getCreatedAt();
+                    int byCreatedAt = rightCreated.compareTo(leftCreated);
+                    if (byCreatedAt != 0) {
+                        return byCreatedAt;
+                    }
+                    Long rightId = rightPost.getId() == null ? Long.MIN_VALUE : rightPost.getId();
+                    Long leftId = leftPost.getId() == null ? Long.MIN_VALUE : leftPost.getId();
+                    return rightId.compareTo(leftId);
+                })
+                .map(item -> {
+                    Post p = item.post();
+                    PostResponse r = postMapper.toSummaryResponse(p);
+                    r.setEngagementScore(item.score());
+                    r.setAttachments(toPostAttachmentDtos(p.getId(),
+                            postAttachmentRepository.findByPost_IdOrderByIdAsc(p.getId())));
+                    return r;
+                })
+                .collect(Collectors.toList());
+    }
+
     @Override
     public List<PostResponse> getPostsByCreator(String creator) {
         List<Post> posts = postRepository.findByCreator(creator);
@@ -181,6 +230,24 @@ public class PostServiceImpl implements PostService {
                 .kind(a.getKind().name())
                 .url("/posts/" + postId + "/attachments/" + a.getId())
                 .build()).collect(Collectors.toList());
+    }
+
+    private double calculateEngagementScore(Post post, ScoringProperties.PostEngagement cfg) {
+        long likes = post.getLikesCount() == null ? 0L : post.getLikesCount();
+        long comments = post.getId() == null ? 0L : commentRepository.countByPostId(post.getId());
+        long shares = 0L; // No share entity yet; keep deterministic and explicit.
+
+        long hoursSincePost = 0L;
+        if (post.getCreatedAt() != null) {
+            hoursSincePost = Math.max(0L, Duration.between(post.getCreatedAt(), LocalDateTime.now()).toHours());
+        }
+        double decay = 1.0d / (hoursSincePost + 1.0d);
+        double score = ((likes * cfg.getWeightLikes())
+                + (comments * cfg.getWeightComments())
+                + (shares * cfg.getWeightShares())) * decay;
+        log.debug("post={} likes={} comments={} shares={} hours={} score={}",
+                post.getId(), likes, comments, shares, hoursSincePost, score);
+        return score;
     }
 
     @Override
