@@ -108,6 +108,7 @@ app:
     post-media-dir: ${user.home}/.civic-platform/uploads/post-media
     comment-media-dir: ${user.home}/.civic-platform/uploads/comment-media
   scoring:
+    audit-interval-ms: ${SCORING_AUDIT_INTERVAL_MS:3600000}
     post-engagement:
       weight-likes: ${POST_ENGAGEMENT_WEIGHT_LIKES:2.0}
       weight-comments: ${POST_ENGAGEMENT_WEIGHT_COMMENTS:3.0}

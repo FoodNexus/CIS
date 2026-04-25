@@ -98,7 +98,7 @@ public class EventController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Get event feed with deterministic sorting")
+    @Operation(summary = "Get event feed with deterministic sorting (JQL search remains available on /events/search)")
     @GetMapping("/feed")
     public ResponseEntity<List<EventResponse>> getEventsFeed(
             @RequestParam(name = "sort", defaultValue = "recent") String sort) {
