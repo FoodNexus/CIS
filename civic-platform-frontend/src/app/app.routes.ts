@@ -5,7 +5,7 @@ import { UserTypeGuard } from './core/auth/user-type.guard';
 import { UserType } from './core/models/auth.models';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
 
   { path: 'login', loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent) },
   { path: 'register', loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) },
@@ -195,5 +195,5 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
 
-  { path: '**', redirectTo: '/login' }
+  { path: '**', redirectTo: 'login' }
 ];

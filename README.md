@@ -1,272 +1,192 @@
-# Civic Engagement Platform
+# Civic Platform (CIS)
 
-A comprehensive full-stack platform for managing civic engagement, including users, campaigns, events, projects, and impact metrics.
+Full-stack civic engagement platform inside NutriFlow, built to manage users, campaigns, events, projects, content interactions, recommendations, and impact tracking.
 
-## 🏗️ Project Structure
+This README is intentionally Git-focused and covers project overview, stack, setup, testing, and contribution workflow.
 
+## Overview
+
+The CIS module includes:
+- A Spring Boot backend (`civic-platform-backend`)
+- An Angular frontend (`civic-platform-frontend`)
+- A dedicated ML service (`ml-service`)
+- Local orchestration with Docker Compose (`docker-compose.dev.yml`)
+
+### Major capabilities
+- Authentication/authorization with role and user-type separation
+- Campaign lifecycle and vote-based launch process
+- Event registration, participation, and attendance workflows
+- Project creation, voting, funding, and completion
+- Posts/comments/likes with engagement signals
+- Notification flows and PDF generation
+- Workflow insights and recommendation endpoints (including ML-assisted flows)
+
+### Recently added / emphasized services and features
+- `Project Insight` workflow scoring endpoints
+- Batch workflow ranking endpoint for projects
+- ML service integration (`ml-service`) for recommendation-related use cases
+- Civic feed/recommendation support consumed by frontend modules
+
+## Repository Structure
+
+```text
+CIS/
+├── civic-platform-backend/      # Spring Boot API
+├── civic-platform-frontend/     # Angular app
+├── ml-service/                  # ML/recommendation service
+├── keycloak/                    # Local auth resources
+├── scripts/                     # Utility scripts
+├── docker-compose.dev.yml       # Dev orchestration
+└── docker-compose.yml
 ```
-PI-CIS/
-├── civic-platform-backend/          # Spring Boot Backend
-│   ├── src/main/java/com/civicplatform/
-│   │   ├── controller/           # REST Controllers
-│   │   ├── service/              # Business Logic
-│   │   ├── repository/           # Data Access Layer
-│   │   ├── entity/              # JPA Entities
-│   │   ├── dto/                 # Data Transfer Objects
-│   │   ├── mapper/              # MapStruct Mappers
-│   │   ├── security/            # JWT Authentication
-│   │   ├── validator/           # Custom Validators
-│   │   └── exception/          # Exception Handling
-│   └── src/main/resources/
-│       ├── application.yml       # Configuration
-│       └── templates/email/     # Email Templates
-└── civic-platform-frontend/         # Angular Frontend
-    ├── src/app/
-    │   ├── core/               # Core Services & Auth
-    │   ├── features/           # Feature Modules
-    │   └── shared/            # Shared Components
-    ├── package.json
-    └── angular.json
-```
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend
-- **Spring Boot 3.2.3** - Main framework
-- **Java 17+** - Programming language
-- **Spring Security 6** - Authentication & Authorization
-- **JWT (jjwt 0.12.5)** - Token-based authentication
-- **Spring Data JPA + Hibernate** - Database ORM
-- **MariaDB** - Relational database
-- **MapStruct** - DTO mapping
-- **Bean Validation** - Input validation
-- **Apache PDFBox** - PDF generation
-- **Spring Mail + Thymeleaf** - Email services
-- **Lombok** - Code generation
-- **SpringDoc OpenAPI** - API documentation
+- Java 17+
+- Spring Boot 3.x
+- Spring Security
+- Spring Data JPA + Hibernate
+- MariaDB
+- MapStruct
+- Bean Validation
+- SpringDoc OpenAPI
+- Lombok
 
 ### Frontend
-- **Angular 17+** - Frontend framework
-- **TypeScript** - Type-safe JavaScript
-- **TailwindCSS** - Utility-first CSS framework
-- **RxJS** - Reactive programming
-- **Angular Router** - Client-side routing
-- **Angular Forms** - Form handling
+- Angular 17+
+- TypeScript
+- RxJS
+- Angular Router + Forms
+- TailwindCSS
 
-## 🚀 Getting Started
+### ML / Platform
+- Python-based `ml-service` (Dockerized)
+- Keycloak for identity and SSO flows
+- Docker Compose for local multi-service startup
+
+## Setup
 
 ### Prerequisites
 - Java 17+
+- Maven 3.9+
 - Node.js 18+
-- MariaDB
-- Maven
-- Angular CLI
+- Docker + Docker Compose
 
-### Backend Setup
+### Option A: Run with Docker Compose (recommended)
 
-1. **Database Setup:**
-   ```sql
-   CREATE DATABASE civic_platform;
-   ```
+From `CIS/`:
 
-2. **Configure Application:**
-   Update `civic-platform-backend/src/main/resources/application.yml` with your database credentials:
-   ```yaml
-   spring:
-     datasource:
-       url: jdbc:mariadb://localhost:3306/civic_platform
-       username: your_username
-       password: your_password
-   ```
-
-3. **Run Backend:**
-   ```bash
-   cd civic-platform-backend
-   mvn spring-boot:run
-   ```
-
-4. **Access API Documentation:**
-   Open http://localhost:8080/swagger-ui.html in your browser
-
-### Frontend Setup
-
-1. **Install Dependencies:**
-   ```bash
-   cd civic-platform-frontend
-   npm install
-   ```
-
-2. **Run Development Server:**
-   ```bash
-   npm start
-   ```
-
-3. **Access Application:**
-   Open http://localhost:4200 in your browser
-
-## 📋 Key Features
-
-### 🔐 Authentication & Authorization
-- JWT-based authentication with refresh tokens
-- Role-based access control: **USER** and **ADMIN** only (separate from `user_type`)
-- Multiple user types: Ambassador, Donor, Citizen, Participant
-- Custom validation for user registration
-
-### 👥 User Management
-- Complete CRUD operations
-- User type-specific fields
-- Ambassador promotion logic
-- Profile management
-
-### 📊 Campaign Management
-- Create, launch, and manage campaigns
-- Voting system for campaign activation (100 votes threshold)
-- Progress tracking (kg, meals, funding)
-- Status management (DRAFT, ACTIVE, COMPLETED, CANCELLED)
-
-### 📅 Event Management
-- Event creation and management
-- Registration with capacity limits
-- Check-in functionality
-- Event status tracking
-
-### 💼 Project Management
-- Project creation and funding
-- Vote tracking
-- Progress monitoring
-- Completion reports
-
-### 📈 Impact Metrics
-- Automated daily metrics calculation
-- CO₂ savings tracking
-- Meals distribution metrics
-- PDF report generation
-
-### 📧 Advanced Features
-- **PDF Generation**: Campaign, project, and metrics reports
-- **Email Notifications**: Registration, campaign launches, event confirmations
-- **Scheduled Jobs**: Daily metrics calculation
-- **Role-based UI**: Different interfaces for different user types
-
-## 🔌 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/refresh` - Token refresh
-- `POST /api/auth/logout` - User logout
-
-### Users
-- `GET /api/users` - Get all users (Admin)
-- `GET /api/users/{id}` - Get user by ID
-- `PUT /api/users/{id}` - Update user
-- `DELETE /api/users/{id}` - Delete user (Admin)
-- `POST /api/users/{id}/promote` - Promote to ambassador (Admin)
-
-### Campaigns
-- `GET /api/campaigns` - Get all campaigns
-- `POST /api/campaigns` - Create campaign
-- `POST /api/campaigns/{id}/launch` - Launch campaign
-- `POST /api/campaigns/{id}/vote` - Vote for campaign
-
-### Events
-- `GET /api/events` - Get all events
-- `POST /api/events` - Create event
-- `POST /api/events/{id}/register` - Register for event
-- `POST /api/events/{id}/checkin` - Check-in participant
-
-### Projects
-- `GET /api/projects` - Get all projects
-- `POST /api/projects` - Create project
-- `POST /api/projects/{id}/fund` - Fund project
-- `POST /api/projects/{id}/vote` - Vote for project
-
-### Metrics
-- `GET /api/metrics/daily` - Get daily metrics
-- `GET /api/metrics/monthly` - Get monthly metrics
-- `GET /api/pdf/metrics` - Export metrics PDF
-
-## 🎯 User Types & Roles
-
-### User Types
-- **AMBASSADOR**: Community leaders with badges
-- **DONOR**: Organizations providing resources
-- **CITIZEN**: Regular community members
-- **PARTICIPANT**: Event participants with points
-
-### Roles (Spring `role` — not `user_type`)
-- **ADMIN**: Full system access (moderation, reports, metrics, user management)
-- **USER**: Default at registration; normal authenticated access
-
-## 📧 Development
-
-### Backend Development
 ```bash
-# Build
-mvn clean install
-
-# Run tests
-mvn test
-
-# Run with specific profile
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
+docker compose -f docker-compose.dev.yml up -d
 ```
 
-### Frontend Development
+This starts the main CIS dependencies/services for local development (DB, backend, ML service and related containers defined in compose).
+
+### Option B: Run services manually
+
+#### 1) Backend
+
 ```bash
-# Build for production
-npm run build
+cd civic-platform-backend
+mvn clean spring-boot:run
+```
 
-# Run tests
+#### 2) Frontend
+
+```bash
+cd civic-platform-frontend
+npm install
+npm start
+```
+
+#### 3) ML Service
+
+Use Docker compose for local consistency, or run manually from `ml-service/` based on that service's runtime requirements.
+
+## API and Dev Access
+
+- Backend API base (local): `http://localhost:8081/api` (depending on your active config)
+- OpenAPI / Swagger: check backend SpringDoc path in your running profile
+- Frontend (local): `http://localhost:4200`
+
+## Testing and Quality
+
+### Backend tests
+
+```bash
+cd civic-platform-backend
+mvn test
+```
+
+Recommended for CI:
+
+```bash
+mvn clean verify
+```
+
+### Frontend tests
+
+```bash
+cd civic-platform-frontend
 npm test
+```
 
-# Lint code
+### Linting
+
+```bash
+cd civic-platform-frontend
 npm run lint
 ```
 
-## 🔧 Configuration
+### Suggested quality baseline
+- Unit/integration test coverage tracked in CI
+- Static analysis enforced in pipeline (SonarQube/SonarLint recommended)
+- PRs should pass tests and lint before merge
 
-### Environment Variables
-- `DB_PASSWORD`: MariaDB password
-- `JWT_SECRET`: JWT signing secret
-- `MAIL_USERNAME`: Email username
-- `MAIL_PASSWORD`: Email password
-- `CORS_ALLOWED_ORIGINS`: Allowed CORS origins
+## Git Workflow
 
-### Database Schema
-The application uses JPA/Hibernate with `ddl-auto: update` for development. The schema includes:
-- Users with type-specific fields
-- Campaigns with voting and progress tracking
-- Events with registration management
-- Projects with funding tracking
-- Posts with comments and likes
-- Impact metrics with automated calculation
+### Branching
+- `main`: stable branch
+- feature branches: `feature/<scope>-<short-description>`
+- bugfix branches: `fix/<scope>-<short-description>`
 
-## 📧 Production Deployment
+### Commit style
+- Use clear, scoped messages (Conventional Commits recommended):
+  - `feat(campaign): add launch vote threshold validation`
+  - `fix(project): prevent double-vote from same user`
 
-### Backend
-1. Set up MariaDB server
-2. Configure production properties
-3. Build JAR: `mvn clean package`
-4. Deploy to server with: `java -jar target/civic-platform-backend-1.0.0.jar`
+### Pull requests
+Each PR should include:
+- Functional summary (what/why)
+- Test evidence (commands + results)
+- API/UI impact notes
+- Migration/config notes if applicable
 
-### Frontend
-1. Build for production: `npm run build`
-2. Deploy dist/ folder to web server
-3. Configure web server for SPA routing
+## Contributors
 
-## 🤝 Contributing
+### How to contribute
+1. Fork or clone the repository.
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature/your-change
+   ```
+3. Implement changes and run tests/lint.
+4. Commit and push your branch.
+5. Open a Pull Request with context and verification notes.
 
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open Pull Request
+### Contribution standards
+- Keep changes focused and reviewable.
+- Add/adjust tests for behavioral changes.
+- Avoid committing secrets or environment-specific credentials.
 
-## 📄 License
+## License
 
-This project is licensed under the ISC License.
+ISC (or repository-defined license).
 
-## 📞 Support
+## Support
 
-For support and questions, please open an issue in the repository.
+For issues or questions, open a repository issue and include:
+- Service/module concerned
+- Reproduction steps
+- Logs/screenshots where relevant

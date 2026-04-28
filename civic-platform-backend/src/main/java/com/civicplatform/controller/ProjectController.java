@@ -3,12 +3,14 @@ package com.civicplatform.controller;
 import com.civicplatform.dto.request.ProjectFundingRequest;
 import com.civicplatform.dto.request.ProjectRequest;
 import com.civicplatform.dto.response.ProjectFundingResponse;
+import com.civicplatform.dto.response.ProjectInsightResponse;
 import com.civicplatform.dto.response.ProjectResponse;
 import com.civicplatform.entity.User;
 import com.civicplatform.enums.UserType;
 import com.civicplatform.repository.UserRepository;
 import com.civicplatform.security.RegularAccountPolicy;
 import com.civicplatform.service.ProjectService;
+import com.civicplatform.service.ProjectInsightService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,6 +30,7 @@ import java.util.List;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final ProjectInsightService projectInsightService;
     private final UserRepository userRepository;
 
     @Operation(summary = "Create a new project")
@@ -79,6 +82,20 @@ public class ProjectController {
     @GetMapping("/{id}")
     public ResponseEntity<ProjectResponse> getProjectById(@PathVariable Long id) {
         ProjectResponse response = projectService.getProjectById(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get deterministic workflow insight for a project")
+    @GetMapping("/{id}/insights")
+    public ResponseEntity<ProjectInsightResponse> getProjectInsight(@PathVariable Long id) {
+        ProjectInsightResponse response = projectInsightService.getProjectInsight(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get workflow insights for all projects sorted by score")
+    @GetMapping("/insights/workflow")
+    public ResponseEntity<List<ProjectInsightResponse>> getWorkflowInsights() {
+        List<ProjectInsightResponse> response = projectInsightService.getWorkflowInsights();
         return ResponseEntity.ok(response);
     }
 

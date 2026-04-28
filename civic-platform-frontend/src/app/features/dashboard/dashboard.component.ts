@@ -16,6 +16,7 @@ import { RecommendationsService } from '@core/services/recommendations.service';
 import { EventInvitationService } from '@core/services/event-invitation.service';
 import { EventInvitation } from '@core/models/event-invitation.model';
 import { isMeaningfulModelVersion } from '@core/utils/ml-display';
+import { NotificationsService } from '@core/services/notifications.service';
 
 interface DashboardTab {
   id: string;
@@ -32,6 +33,12 @@ interface FundingHistory {
   paymentMethod?: string;
 }
 
+interface DashboardSettings {
+  personalizedFeed: boolean;
+  defaultTab: string;
+  hideCompletedParticipations: boolean;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -40,6 +47,13 @@ interface FundingHistory {
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
+  private readonly settingsStorageKey = 'civic_dashboard_settings_v1';
+  settings: DashboardSettings = {
+    personalizedFeed: true,
+    defaultTab: 'events',
+    hideCompletedParticipations: false
+  };
+
   // User data
   currentUser: User | null = null;
 
@@ -100,6 +114,9 @@ export class DashboardComponent implements OnInit {
   likedPosts = new Set<number>();
 
   certificateLoadingKey: string | null = null;
+  unreadNotificationsCount = 0;
+  notificationsBusy = false;
+  settingsMessage: string | null = null;
 
   constructor(
     private authService: AuthService,
@@ -109,11 +126,13 @@ export class DashboardComponent implements OnInit {
     private postsService: PostsService,
     private recommendationsService: RecommendationsService,
     private eventInvitationService: EventInvitationService,
+    private notificationsService: NotificationsService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.loadSettings();
     this.currentUser = this.authService.getCurrentUser();
     if (this.route.snapshot.queryParamMap.get('tab') === 'invitations') {
       this.activeTab = 'invitations';
@@ -125,13 +144,17 @@ export class DashboardComponent implements OnInit {
     });
     this.setDefaultTab();
     this.loadAllData();
+    this.loadUnreadNotificationsCount();
   }
 
   setDefaultTab(): void {
     if (this.activeTab === 'invitations') {
       return;
     }
-    this.activeTab = 'events';
+    const allowedTabs = this.getTabs().map(tab => tab.id);
+    this.activeTab = allowedTabs.includes(this.settings.defaultTab)
+      ? this.settings.defaultTab
+      : 'events';
   }
 
   getWelcomeSubtitle(): string {
@@ -157,7 +180,7 @@ export class DashboardComponent implements OnInit {
     if (u.userType === UserType.DONOR) {
       return false;
     }
-    return true;
+    return this.settings.personalizedFeed;
   }
 
   /** Event invitations: non-donor regular users (citizen, participant, ambassador). */
@@ -529,6 +552,78 @@ export class DashboardComponent implements OnInit {
   // Refresh data
   refreshData(): void {
     this.loadAllData();
+  }
+
+  getDisplayedParticipations(): EventParticipation[] {
+    if (!this.settings.hideCompletedParticipations) {
+      return this.myParticipations;
+    }
+    return this.myParticipations.filter(p => p.status !== 'COMPLETED');
+  }
+
+  setPersonalizedFeed(enabled: boolean): void {
+    this.settings.personalizedFeed = enabled;
+    this.persistSettings('Recommendation feed preference saved.');
+    this.refreshData();
+  }
+
+  setDefaultTabPreference(tabId: string): void {
+    this.settings.defaultTab = tabId;
+    this.persistSettings('Default tab updated.');
+    this.setDefaultTab();
+  }
+
+  setHideCompletedParticipations(enabled: boolean): void {
+    this.settings.hideCompletedParticipations = enabled;
+    this.persistSettings('Participation visibility updated.');
+  }
+
+  markAllNotificationsRead(): void {
+    this.notificationsBusy = true;
+    this.notificationsService.markAllRead().pipe(
+      finalize(() => (this.notificationsBusy = false))
+    ).subscribe({
+      next: () => {
+        this.unreadNotificationsCount = 0;
+        this.settingsMessage = 'All notifications marked as read.';
+      },
+      error: () => {
+        this.settingsMessage = 'Could not mark notifications as read.';
+      }
+    });
+  }
+
+  private loadUnreadNotificationsCount(): void {
+    this.notificationsService.unreadCount().subscribe({
+      next: (r) => {
+        this.unreadNotificationsCount = r?.count ?? 0;
+      },
+      error: () => {
+        this.unreadNotificationsCount = 0;
+      }
+    });
+  }
+
+  private loadSettings(): void {
+    try {
+      const raw = localStorage.getItem(this.settingsStorageKey);
+      if (!raw) {
+        return;
+      }
+      const parsed = JSON.parse(raw) as Partial<DashboardSettings>;
+      this.settings = {
+        personalizedFeed: parsed.personalizedFeed ?? this.settings.personalizedFeed,
+        defaultTab: parsed.defaultTab ?? this.settings.defaultTab,
+        hideCompletedParticipations: parsed.hideCompletedParticipations ?? this.settings.hideCompletedParticipations
+      };
+    } catch {
+      // Ignore malformed local preferences and keep defaults.
+    }
+  }
+
+  private persistSettings(message?: string): void {
+    localStorage.setItem(this.settingsStorageKey, JSON.stringify(this.settings));
+    this.settingsMessage = message ?? null;
   }
 
   certificateKey(p: EventParticipation): string {

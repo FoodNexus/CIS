@@ -84,22 +84,22 @@ services:
     volumes:
       - dev_ml_models:/app/models
 
-  front:
-    image: teamsync-frontend-dev:latest
-    container_name: civic-platform-frontend-dev
-    restart: unless-stopped
-    working_dir: /app
-    command: sh -c "npm install && npm run start -- --host 0.0.0.0 --port 4200"
-    environment:
-      CHOKIDAR_USEPOLLING: "true"
-    volumes:
-      - ./civic-platform-frontend:/app
-      - dev_front_node_modules:/app/node_modules
-      - dev_front_angular_cache:/app/.angular
-    depends_on:
-      - back
-    ports:
-      - "4200:4200"
+  # front:
+  #   image: teamsync-frontend-dev:latest
+  #   container_name: civic-platform-frontend-dev
+  #   restart: unless-stopped
+  #   working_dir: /app
+  #   command: sh -c "npm install && npm run start -- --host 0.0.0.0 --port 4200"
+  #   environment:
+  #     CHOKIDAR_USEPOLLING: "true"
+  #   volumes:
+  #     - ./civic-platform-frontend:/app
+  #     - dev_front_node_modules:/app/node_modules
+  #     - dev_front_angular_cache:/app/.angular
+  #   depends_on:
+  #     - back
+  #   ports:
+  #     - "4200:4200"
 
 volumes:
   dev_mariadb_data:
