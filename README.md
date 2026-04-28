@@ -122,6 +122,13 @@ Recommended for CI:
 mvn clean verify
 ```
 
+The backend test setup uses JUnit 5 and Mockito via `spring-boot-starter-test`.
+JaCoCo is configured in Maven to:
+- generate XML/HTML reports during `verify`
+- enforce minimum coverage thresholds:
+  - line coverage: `>= 80%`
+  - branch coverage: `>= 70%`
+
 ### Frontend tests
 
 ```bash
@@ -138,8 +145,28 @@ npm run lint
 
 ### Suggested quality baseline
 - Unit/integration test coverage tracked in CI
-- Static analysis enforced in pipeline (SonarQube/SonarLint recommended)
+- Static analysis enforced in pipeline (SonarQube) and during development (SonarLint)
 - PRs should pass tests and lint before merge
+
+### SonarQube / SonarLint
+
+`civic-platform-backend` includes Maven Sonar integration (`sonar-maven-plugin`) and JaCoCo report wiring.
+
+Typical local scan command:
+
+```bash
+cd civic-platform-backend
+mvn clean verify sonar:sonar \
+  -Dsonar.host.url=http://<your-sonarqube-host>:9000 \
+  -Dsonar.token=<your-token>
+```
+
+Recommended quality gate:
+- New Bugs: `0`
+- New Vulnerabilities: `0`
+- New Security Hotspots Reviewed: `100%`
+- Coverage on New Code: `>= 80%`
+- Duplications on New Code: `< 3%`
 
 ## Git Workflow
 
